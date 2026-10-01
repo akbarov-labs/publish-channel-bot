@@ -1,0 +1,23 @@
+[project]
+name = "publish-channel-bot"
+version = "0.1.0"
+description = "Two-way sync between a Telegram channel and an author's blog"
+requires-python = ">=3.11"
+dependencies = [
+    "aiogram>=3.13",
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.30",
+    "httpx>=0.27",
+    "sqlalchemy[asyncio]>=2.0",
+    "aiosqlite>=0.20",
+    "asyncpg>=0.29",
+    "pydantic-settings>=2.4",
+    "cryptography>=43.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.3", "pytest-asyncio>=0.24"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]

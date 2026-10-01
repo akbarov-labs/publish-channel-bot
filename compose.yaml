@@ -1,0 +1,99 @@
+# Telegram channel <-> blog sync.
+#
+#   bot    - aiogram service, talks to Telegram and to the blog API
+#   blog   - Laravel API + Filament admin
+#   web    - Next.js reader-facing site
+#
+# The bot and the blog keep separate databases and talk only over HTTP.
+
+services:
+  bot-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: bot
+      POSTGRES_PASSWORD: ${BOT_DB_PASSWORD:-bot}
+      POSTGRES_DB: bot
+    volumes:
+      - bot-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U bot -d bot"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  blog-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: blog
+      POSTGRES_PASSWORD: ${BLOG_DB_PASSWORD:-blog}
+      POSTGRES_DB: blog
+    volumes:
+      - blog-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U blog -d blog"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  bot:
+    build: ./bot
+    env_file: ./bot/.env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://bot:${BOT_DB_PASSWORD:-bot}@bot-db:5432/bot
+    depends_on:
+      bot-db:
+        condition: service_healthy
+    ports:
+      - "${BOT_PORT:-8000}:8000"
+    restart: unless-stopped
+
+  blog:
+    build: ./blog
+    env_file: ./blog/.env
+    environment:
+      DB_CONNECTION: pgsql
+      DB_HOST: blog-db
+      DB_PORT: 5432
+      DB_DATABASE: blog
+      DB_USERNAME: blog
+      DB_PASSWORD: ${BLOG_DB_PASSWORD:-blog}
+    depends_on:
+      blog-db:
+        condition: service_healthy
+    ports:
+      - "${BLOG_PORT:-8001}:8001"
+    restart: unless-stopped
+
+  # Delivers the publish webhook to the bot without blocking the admin UI.
+  blog-queue:
+    build: ./blog
+    # Migrations belong to the blog service alone, so skip the entrypoint here.
+    entrypoint: ["php"]
+    command: ["artisan", "queue:work", "--tries=3", "--sleep=1"]
+    env_file: ./blog/.env
+    environment:
+      DB_CONNECTION: pgsql
+      DB_HOST: blog-db
+      DB_PORT: 5432
+      DB_DATABASE: blog
+      DB_USERNAME: blog
+      DB_PASSWORD: ${BLOG_DB_PASSWORD:-blog}
+    depends_on:
+      blog-db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  web:
+    build: ./web
+    environment:
+      # Server-side calls stay on the compose network.
+      BLOG_API_URL: http://blog:8001/api
+    depends_on:
+      - blog
+    ports:
+      - "${WEB_PORT:-3000}:3000"
+    restart: unless-stopped
+
+volumes:
+  bot-pgdata:
+  blog-pgdata:
