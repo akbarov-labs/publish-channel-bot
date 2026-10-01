@@ -16,7 +16,7 @@ class BotMediaController extends Controller
             'file' => ['required', 'file', 'max:20480'],
         ]);
 
-        $path = $request->file('file')->store('posts', 'public');
+        $path = $request->file('file')->store('posts/'.$request->user()->username, 'public');
 
         return response()->json(['url' => asset('storage/'.$path)], 201);
     }

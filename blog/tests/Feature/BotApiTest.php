@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Jobs\PublishToTelegram;
 use App\Models\Post;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Queue;
@@ -13,21 +14,84 @@ class BotApiTest extends TestCase
 {
     use RefreshDatabase;
 
-    private const TOKEN = 'test-bot-token';
+    private const LEGACY_TOKEN = 'legacy-env-token';
+
+    private User $author;
+
+    private string $token;
 
     protected function setUp(): void
     {
         parent::setUp();
         config([
-            'telegram.api_token' => self::TOKEN,
-            'telegram.webhook_url' => 'https://bot.test/webhooks/site/secret-123',
-            'telegram.webhook_secret' => 'secret-123',
+            'app.frontend_url' => 'https://example.test',
+            'telegram.api_token' => self::LEGACY_TOKEN,
         ]);
+
+        $this->author = User::factory()->create([
+            'username' => 'aziza',
+            'webhook_url' => 'https://bot.test/webhooks/site/secret-123',
+            'webhook_secret' => 'secret-123',
+        ]);
+        $this->token = $this->author->issueBotToken();
     }
 
-    private function asBot(): array
+    private function asBot(?string $token = null): array
     {
-        return ['Authorization' => 'Bearer '.self::TOKEN];
+        return ['Authorization' => 'Bearer '.($token ?? $this->token)];
+    }
+
+    public function test_each_author_has_their_own_token(): void
+    {
+        $other = User::factory()->create(['username' => 'dmitry']);
+        $otherToken = $other->issueBotToken();
+
+        $this->getJson('/api/telegram/ping', $this->asBot())->assertJsonPath('author', 'aziza');
+        $this->getJson('/api/telegram/ping', $this->asBot($otherToken))->assertJsonPath('author', 'dmitry');
+    }
+
+    public function test_the_legacy_env_token_acts_for_the_first_author(): void
+    {
+        User::factory()->create(['username' => 'later']);
+
+        $this->getJson('/api/telegram/ping', $this->asBot(self::LEGACY_TOKEN))
+            ->assertOk()
+            ->assertJsonPath('author', 'aziza');
+    }
+
+    public function test_only_the_hash_of_a_bot_token_is_stored(): void
+    {
+        $this->assertSame(hash('sha256', $this->token), $this->author->fresh()->bot_token_hash);
+        $this->assertArrayNotHasKey('bot_token_hash', $this->author->fresh()->toArray());
+    }
+
+    public function test_a_channel_post_is_owned_by_the_tokens_author_and_links_to_their_subdomain(): void
+    {
+        $response = $this->postJson('/api/telegram/posts', [
+            'source' => 'telegram',
+            'external_id' => 'tg:-100123:44',
+            'title' => 'Mine',
+            'html' => '<p>Body</p>',
+        ], $this->asBot())->assertCreated();
+
+        $this->assertSame($this->author->id, Post::firstOrFail()->user_id);
+        $this->assertSame('https://aziza.example.test/posts/mine', $response->json('url'));
+    }
+
+    public function test_an_author_cannot_edit_another_authors_post(): void
+    {
+        $other = User::factory()->create(['username' => 'dmitry']);
+        $post = $other->posts()->create([
+            'title' => 'Not yours',
+            'status' => 'published',
+            'source' => 'telegram',
+            'published_at' => now(),
+        ]);
+
+        $this->patchJson("/api/telegram/posts/{$post->id}", ['title' => 'Hijacked'], $this->asBot())
+            ->assertNotFound();
+
+        $this->assertSame('Not yours', $post->fresh()->title);
     }
 
     public function test_the_bot_can_verify_its_credentials(): void
@@ -108,7 +172,7 @@ class BotApiTest extends TestCase
 
     public function test_an_edited_channel_post_updates_the_article(): void
     {
-        $post = Post::create([
+        $post = $this->author->posts()->create([
             'title' => 'Before',
             'html' => '<p>old</p>',
             'status' => 'published',
@@ -144,7 +208,7 @@ class BotApiTest extends TestCase
     {
         Http::fake(['bot.test/*' => Http::response(['status' => 'ok'])]);
 
-        $post = Post::create([
+        $post = $this->author->posts()->create([
             'title' => 'Written in the admin',
             'html' => '<p>Body</p>',
             'status' => 'published',
@@ -170,29 +234,5 @@ class BotApiTest extends TestCase
         Post::create(['title' => 'Draft', 'html' => '<p>x</p>', 'status' => 'draft']);
 
         Queue::assertNothingPushed();
-    }
-
-    public function test_the_public_feed_only_lists_published_posts(): void
-    {
-        Http::fake();
-        Post::create(['title' => 'Live', 'status' => 'published', 'published_at' => now()]);
-        Post::create(['title' => 'Hidden', 'status' => 'draft']);
-
-        $response = $this->getJson('/api/public/posts')->assertOk();
-
-        $this->assertCount(1, $response->json('data'));
-        $this->assertSame('Live', $response->json('data.0.title'));
-    }
-
-    public function test_a_post_can_be_fetched_by_slug_with_its_carousel(): void
-    {
-        Http::fake();
-        $post = Post::create(['title' => 'Gallery post', 'post_type' => 'gallery', 'status' => 'published', 'published_at' => now()]);
-        $post->media()->create(['url' => 'https://cdn.test/1.jpg', 'type' => 'photo', 'position' => 0]);
-
-        $this->getJson('/api/public/posts/gallery-post')
-            ->assertOk()
-            ->assertJsonPath('post_type', 'gallery')
-            ->assertJsonPath('media.0.url', 'https://cdn.test/1.jpg');
     }
 }

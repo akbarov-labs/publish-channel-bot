@@ -20,8 +20,12 @@ class PublishToTelegram implements ShouldQueue
 
     public function handle(): void
     {
-        $url = (string) config('telegram.webhook_url');
-        $secret = (string) config('telegram.webhook_secret');
+        $this->post->loadMissing(['media', 'user']);
+
+        // Each author connects their own bot session; the .env values remain
+        // as the fallback for installs that predate per-author settings.
+        $url = (string) ($this->post->user?->webhook_url ?: config('telegram.webhook_url'));
+        $secret = (string) ($this->post->user?->webhook_secret ?: config('telegram.webhook_secret'));
 
         if ($url === '' || $secret === '') {
             Log::info('Telegram sync is not configured; skipping post '.$this->post->id);
@@ -33,8 +37,6 @@ class PublishToTelegram implements ShouldQueue
         if ($this->post->cameFromTelegram()) {
             return;
         }
-
-        $this->post->loadMissing('media');
 
         $body = json_encode([
             'event' => 'post.published',

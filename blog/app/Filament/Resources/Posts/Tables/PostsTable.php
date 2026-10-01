@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Posts\Tables;
 use App\Models\Post;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\Action;
 use Filament\Actions\EditAction;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\ImageColumn;
@@ -66,6 +67,11 @@ class PostsTable
                     ->options([Post::SOURCE_WEB => 'Written here', Post::SOURCE_TELEGRAM => 'From Telegram']),
             ])
             ->recordActions([
+                Action::make('view')
+                    ->label('View')
+                    ->icon('heroicon-o-arrow-top-right-on-square')
+                    ->url(fn (Post $record): string => $record->url(), shouldOpenInNewTab: true)
+                    ->visible(fn (Post $record): bool => $record->isPublished()),
                 EditAction::make(),
             ])
             ->toolbarActions([

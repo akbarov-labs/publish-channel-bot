@@ -17,5 +17,8 @@ Route::prefix('telegram')->middleware('bot.auth')->group(function () {
 // Consumed by the Next.js frontend.
 Route::prefix('public')->group(function () {
     Route::get('/posts', [PublicPostController::class, 'index']);
-    Route::get('/posts/{slug}', [PublicPostController::class, 'show']);
+    Route::get('/authors', [PublicPostController::class, 'authors']);
+    Route::get('/authors/{username}', [PublicPostController::class, 'author']);
+    Route::get('/authors/{username}/posts', [PublicPostController::class, 'authorPosts']);
+    Route::get('/authors/{username}/posts/{slug}', [PublicPostController::class, 'show']);
 });

@@ -6,16 +6,19 @@ use App\Http\Controllers\Controller;
 use App\Models\Post;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
 
 class BotPostController extends Controller
 {
     /** Lets the bot verify the base URL and token during /connect. */
-    public function ping(): JsonResponse
+    public function ping(Request $request): JsonResponse
     {
+        $author = $request->user();
+
         return response()->json([
             'ok' => true,
             'site' => config('app.name'),
+            'author' => $author->username,
+            'url' => $author->siteUrl(),
         ]);
     }
 
@@ -34,18 +37,20 @@ class BotPostController extends Controller
             'media.*.type' => ['required', 'string', 'in:photo,video,document'],
         ]);
 
+        $author = $request->user();
+
         // external_id is the idempotency key: Telegram can redeliver an update.
-        $existing = Post::where('external_id', $data['external_id'])->first();
+        $existing = $author->posts()->where('external_id', $data['external_id'])->first();
         if ($existing) {
             return response()->json(['id' => (string) $existing->id, 'url' => $existing->url()]);
         }
 
         $media = $data['media'] ?? [];
 
-        $post = Post::create([
+        $post = $author->posts()->create([
             'title' => $data['title'],
             'html' => $data['html'] ?? '',
-            'excerpt' => Str::limit(strip_tags((string) ($data['html'] ?? '')), 280),
+            'excerpt' => Post::excerptFrom($data['html'] ?? ''),
             'post_type' => $data['post_type'] ?? Post::TYPE_ARTICLE,
             'status' => 'published',
             'source' => Post::SOURCE_TELEGRAM,
@@ -68,6 +73,9 @@ class BotPostController extends Controller
 
     public function update(Request $request, Post $post): JsonResponse
     {
+        // A token only ever reaches its own author's posts.
+        abort_unless($post->user_id === $request->user()->id, 404);
+
         $data = $request->validate([
             'title' => ['required', 'string', 'max:255'],
             'html' => ['nullable', 'string'],
@@ -76,7 +84,7 @@ class BotPostController extends Controller
         $post->update([
             'title' => $data['title'],
             'html' => $data['html'] ?? '',
-            'excerpt' => Str::limit(strip_tags((string) ($data['html'] ?? '')), 280),
+            'excerpt' => Post::excerptFrom($data['html'] ?? ''),
         ]);
 
         return response()->json(['id' => (string) $post->id, 'url' => $post->url()]);

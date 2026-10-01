@@ -120,7 +120,9 @@ Two limits worth knowing:
 
 ## Author setup flow
 
-1. DM the bot `/connect`, then send the API base URL and token.
+1. DM the bot `/connect`, then send the API base URL and token. The bundled
+   blog serves many authors from one API base URL; each author generates their
+   own token on their admin Profile page, and it decides whose space posts land in.
 2. The bot verifies with `GET /ping`, stores the token encrypted (Fernet), and
    returns the webhook URL and signing secret.
 3. Add the bot to the channel as an admin with *Post messages*. The bot binds

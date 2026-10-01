@@ -1,3 +1,5 @@
+import { cache } from "react";
+
 export type PostMedium = {
   id: number;
   url: string;
@@ -5,63 +7,84 @@ export type PostMedium = {
   position: number;
 };
 
-export type Post = {
+export type Author = {
+  username: string;
+  name: string;
+  bio: string | null;
+  avatar_url: string | null;
+  telegram_url: string | null;
+  site_url: string;
+  posts_count?: number;
+  latest_post_at?: string | null;
+};
+
+export type PostSummary = {
   id: number;
   title: string;
   slug: string;
-  html: string | null;
   excerpt: string | null;
   post_type: "article" | "gallery" | "video";
   cover_image: string | null;
   telegraph_url: string | null;
   published_at: string | null;
+  url: string;
   media: PostMedium[];
+  author?: Author;
 };
 
-type Paginated<T> = {
+export type Post = PostSummary & {
+  html: string | null;
+  author: Author;
+  older: PostSummary | null;
+  newer: PostSummary | null;
+  more: PostSummary[];
+};
+
+export type Paginated<T> = {
   data: T[];
   current_page: number;
   last_page: number;
+  total: number;
 };
 
 const API_BASE = process.env.BLOG_API_URL ?? "http://localhost:8001/api";
 
 // Posts change when the author publishes, so a short revalidation window keeps
-// pages static without leaving new posts unpublished for long.
+// pages cheap without leaving new posts unpublished for long.
 const REVALIDATE_SECONDS = 60;
 
-export async function fetchPosts(page = 1): Promise<Paginated<Post>> {
-  const response = await fetch(`${API_BASE}/public/posts?page=${page}`, {
+async function get<T>(path: string): Promise<T | null> {
+  const response = await fetch(`${API_BASE}/public${path}`, {
     next: { revalidate: REVALIDATE_SECONDS },
+    headers: { Accept: "application/json" },
   });
 
+  if (response.status === 404) return null;
   if (!response.ok) {
-    throw new Error(`Could not load posts: ${response.status}`);
+    throw new Error(`Blog API ${path} answered ${response.status}`);
   }
 
   return response.json();
 }
 
-export async function fetchPost(slug: string): Promise<Post | null> {
-  const response = await fetch(`${API_BASE}/public/posts/${encodeURIComponent(slug)}`, {
-    next: { revalidate: REVALIDATE_SECONDS },
-  });
+const segment = encodeURIComponent;
 
-  if (response.status === 404) {
-    return null;
-  }
-  if (!response.ok) {
-    throw new Error(`Could not load post ${slug}: ${response.status}`);
-  }
+// cache() lets generateMetadata and the page share one request per render.
 
-  return response.json();
-}
+export const getAuthors = cache(async () => (await get<{ data: Author[] }>("/authors"))?.data ?? []);
 
-export function formatDate(value: string | null): string {
-  if (!value) return "";
-  return new Date(value).toLocaleDateString(undefined, {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-}
+export const getLatestPosts = cache(
+  async (page = 1, perPage = 12) =>
+    (await get<Paginated<PostSummary>>(`/posts?page=${page}&per_page=${perPage}`))!,
+);
+
+export const getAuthor = cache((username: string) => get<Author>(`/authors/${segment(username)}`));
+
+export const getAuthorPosts = cache(
+  (username: string, page = 1) =>
+    get<Paginated<PostSummary>>(`/authors/${segment(username)}/posts?page=${page}`),
+);
+
+export const getPost = cache((username: string, slug: string) =>
+  get<Post>(`/authors/${segment(username)}/posts/${segment(slug)}`),
+);

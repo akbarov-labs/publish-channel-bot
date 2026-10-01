@@ -1,7 +1,8 @@
 # Telegram channel ↔ blog
 
 A blogging setup where a Telegram channel and a website stay in step, in both
-directions, for many authors at once.
+directions, for many authors at once. Every author gets their own space on the
+reader site at `<username>.<your domain>`; the root domain lists them all.
 
 | Service | Stack | Purpose |
 | --- | --- | --- |
@@ -54,22 +55,37 @@ Both services have tests for this — `bot/tests/test_loop_guard.py` and
 
 ```bash
 cp bot/.env.example bot/.env      # set BOT_TOKEN and SECRET_KEY
-cp blog/.env.example blog/.env    # set TELEGRAM_API_TOKEN
+cp blog/.env.example blog/.env    # set APP_KEY and FRONTEND_URL
 
 docker compose up --build
 ```
 
 | | |
 | --- | --- |
-| Reader site | http://localhost:3000 |
+| Reader site (directory) | http://localhost:3000 |
+| An author's space | http://&lt;username&gt;.localhost:3000 |
 | Admin panel | http://localhost:8001/admin |
 | Blog API | http://localhost:8001/api |
 | Bot webhooks | http://localhost:8000 |
 
-Create the first admin user:
+Create an author (every user of the admin is an author):
 
 ```bash
 docker compose exec blog php artisan make:filament-user
+```
+
+The author then opens **Profile** in the admin to pick a username (their
+subdomain), add a bio, avatar and channel link, and generate a bot token.
+
+Browsers resolve `*.localhost` to your machine, so author spaces work locally
+without DNS. In production, point a wildcard record `*.example.com` at the web
+service and set `ROOT_URL=https://example.com` for it and
+`FRONTEND_URL=https://example.com` for the blog.
+
+Demo authors and posts in Russian, Uzbek and English, for local work only:
+
+```bash
+docker compose exec blog php artisan db:seed --class=DemoContentSeeder
 ```
 
 Generate the bot's encryption key:
@@ -81,12 +97,12 @@ docker compose run --rm bot python -c \
 
 ## Connecting an author
 
-1. DM the bot `/connect`.
-2. Send the blog's API base URL — `https://yourblog.com/api/telegram` — then the
-   value of `TELEGRAM_API_TOKEN` from the blog's `.env`.
+1. In the admin, open **Profile** and press **Generate bot token**. The token is
+   shown once; only its hash is stored.
+2. DM the bot `/connect`. Send the blog's API base URL —
+   `https://yourblog.com/api/telegram`, the same for every author — then the token.
 3. The bot verifies with `GET /ping` and replies with a webhook URL and signing
-   secret. Put those in the blog's `TELEGRAM_WEBHOOK_URL` and
-   `TELEGRAM_WEBHOOK_SECRET`.
+   secret. Paste them into the **Telegram bot** section of the same Profile page.
 4. Add the bot to the channel as an admin with *Post messages*.
 5. Send `/activate` in the channel.
 6. `/import` to turn the posts already in the channel into blog posts.
@@ -98,15 +114,17 @@ docker compose run --rm bot python -c \
 
 ```bash
 docker compose run --rm bot sh -c "pip install -q pytest pytest-asyncio && python -m pytest -q"
-docker compose run --rm blog php artisan test
+docker compose run --rm -v "$PWD/blog/tests:/srv/tests:ro" blog php artisan test
 docker compose run --rm web npm run build
 ```
 
 ## Still to do
 
-- Authors currently paste the webhook secret into the blog's `.env` by hand.
-  A settings page in Filament would let them save it from the admin.
-- No pagination controls on the reader site yet; the API already paginates.
+- The reader site's interface text is English; post content keeps its own
+  language (`lang` is guessed per post for hyphenation and screen readers).
+- `TELEGRAM_API_TOKEN` in the blog's `.env` still works and acts for the first
+  author, so single-author installs keep syncing after the upgrade. New authors
+  should use per-author tokens from their profile.
 - `blog/CLAUDE.md` asks for [Laravel Boost](https://github.com/laravel/boost) to
   be installed as a dev dependency. It was not installed — it adds a package
   that was not asked for.

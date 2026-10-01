@@ -13,6 +13,7 @@ use Filament\Forms\Components\Textarea;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rules\Unique;
 
 class PostForm
 {
@@ -28,7 +29,8 @@ class PostForm
                             ->afterStateUpdated(fn (string $state, callable $set) => $set('slug', Str::slug($state))),
                         TextInput::make('slug')
                             ->required()
-                            ->unique(ignoreRecord: true)
+                            // Unique within this author's space only.
+                            ->unique(ignoreRecord: true, modifyRuleUsing: fn (Unique $rule) => $rule->where('user_id', auth()->id()))
                             ->helperText('Used in the public URL. Changing it breaks existing links.'),
                         RichEditor::make('html')
                             ->label('Body')

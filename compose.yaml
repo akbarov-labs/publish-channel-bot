@@ -88,6 +88,8 @@ services:
     environment:
       # Server-side calls stay on the compose network.
       BLOG_API_URL: http://blog:8001/api
+      # Authors live one label below this host: <username>.localhost:3000.
+      ROOT_URL: ${ROOT_URL:-http://localhost:3000}
     depends_on:
       - blog
     ports:
