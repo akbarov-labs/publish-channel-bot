@@ -40,7 +40,7 @@
   --color-accent-soft: var(--accent-soft);
   --color-on-accent: var(--on-accent);
   --font-sans: var(--font-golos), ui-sans-serif, system-ui, sans-serif;
-  --font-serif: var(--font-literata), ui-serif, Georgia, serif;
+  --font-serif: var(--font-literata-okina), var(--font-literata), ui-serif, Georgia, serif;
 }
 
 html {

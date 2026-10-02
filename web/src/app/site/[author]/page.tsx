@@ -2,7 +2,6 @@ import { notFound } from "next/navigation";
 import Avatar from "@/components/Avatar";
 import Pagination, { pageFrom } from "@/components/Pagination";
 import { FeaturedPost, PostRow } from "@/components/PostRow";
-import TelegramButton from "@/components/TelegramButton";
 import { getAuthor, getAuthorPosts } from "@/lib/api";
 import { guessLang } from "@/lib/text";
 
@@ -39,17 +38,12 @@ export default async function AuthorHome({ params, searchParams }: PageProps<"/s
             {author.telegram_url && (
               <>
                 <span aria-hidden="true">·</span>
-                <a href={author.telegram_url} className="hover:text-ink hover:underline hover:underline-offset-4">
+                <a href={author.telegram_url} className="font-medium text-accent underline-offset-4 hover:underline">
                   {channelHandle(author.telegram_url)}
                 </a>
               </>
             )}
           </p>
-          {author.telegram_url && (
-            <div className="mt-6">
-              <TelegramButton href={author.telegram_url} />
-            </div>
-          )}
         </section>
       )}
 

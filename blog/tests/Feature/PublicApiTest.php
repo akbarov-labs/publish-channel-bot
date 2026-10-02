@@ -126,7 +126,7 @@ class PublicApiTest extends TestCase
             'status' => 'draft',
         ]);
 
-        $this->assertSame('Heading First line One Two', $post->excerpt);
+        $this->assertSame('Heading. First line. One. Two', $post->excerpt);
     }
 
     public function test_drafts_are_not_reachable_by_slug(): void

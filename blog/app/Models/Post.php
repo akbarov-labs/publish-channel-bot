@@ -51,15 +51,26 @@ class Post extends Model
     }
 
     /**
-     * Plain text for listings. Block boundaries become spaces first, so a
-     * heading and the paragraph after it do not run together.
+     * Plain text for listings. Every block (paragraph, heading, list item, line
+     * break) becomes its own sentence, so a heading never reads as the start of
+     * the paragraph after it: "Heading. First line. One. Two"
      */
     public static function excerptFrom(?string $html, int $limit = 280): string
     {
-        $spaced = preg_replace('~(</(?:p|h[1-6]|li|blockquote|div|pre|figure)>|<br\s*/?>)~i', '$1 ', (string) $html);
-        $text = html_entity_decode(strip_tags((string) $spaced), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        $marked = preg_replace('~(</(?:p|h[1-6]|li|blockquote|div|pre|figure|figcaption)>|<br\s*/?>)~i', "$1\n", (string) $html);
+        $text = html_entity_decode(strip_tags((string) $marked), ENT_QUOTES | ENT_HTML5, 'UTF-8');
 
-        return Str::limit(trim((string) preg_replace('/\s+/u', ' ', $text)), $limit);
+        $blocks = collect(preg_split('/\n+/u', $text))
+            ->map(fn (string $line) => trim((string) preg_replace('/\s+/u', ' ', $line)))
+            ->filter()
+            ->values();
+
+        // A stop goes between blocks only; the last one ends as the author wrote it.
+        // Closing quotes and brackets may follow the punctuation: «Слово.» or (note.)
+        $sentences = $blocks->map(fn (string $line, int $i) => ($i === $blocks->count() - 1
+            || preg_match('/[.!?…:;][»”"’)\]]*$/u', $line)) ? $line : $line.'.');
+
+        return Str::limit($sentences->implode(' '), $limit);
     }
 
     /** Slugs are unique per author, so two authors may both have "hello-world". */

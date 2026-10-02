@@ -65,7 +65,8 @@ export function cleanExcerpt(post: Pick<PostSummary, "excerpt" | "title">): stri
   if (!post.excerpt) return null;
   const excerpt = post.excerpt.trim();
   const title = post.title.trim();
-  const rest = excerpt.startsWith(title) ? excerpt.slice(title.length).trim() : excerpt;
+  // The API ends each block with a full stop, so the title leaves one behind.
+  const rest = excerpt.startsWith(title) ? excerpt.slice(title.length).replace(/^[.:;!?…\s]+/, "") : excerpt;
   return rest.length > 0 ? rest : null;
 }
 

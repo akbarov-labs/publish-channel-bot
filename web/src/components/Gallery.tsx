@@ -140,8 +140,10 @@ export default function Gallery({ items, label }: { items: PostMedium[]; label: 
               onClick={() => go(position)}
               aria-label={`Show photo ${position + 1}`}
               aria-current={position === index ? "true" : undefined}
-              className={`relative size-14 shrink-0 overflow-hidden rounded-[4px] bg-surface transition-opacity duration-150 sm:size-16 ${
-                position === index ? "opacity-100 ring-2 ring-ink ring-offset-2 ring-offset-bg" : "opacity-55 hover:opacity-90"
+              className={`relative size-14 shrink-0 overflow-hidden rounded-[4px] bg-surface transition-[filter] duration-150 sm:size-16 ${
+                position === index
+                  ? "ring-2 ring-ink ring-offset-2 ring-offset-bg"
+                  : "brightness-[0.88] saturate-[0.55] hover:brightness-100 hover:saturate-100"
               }`}
             >
               {item.type === "video" ? (

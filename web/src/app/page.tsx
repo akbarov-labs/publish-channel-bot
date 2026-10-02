@@ -1,7 +1,7 @@
-import Link from "next/link";
 import Avatar from "@/components/Avatar";
 import Pagination, { pageFrom } from "@/components/Pagination";
 import { PostRow } from "@/components/PostRow";
+import SiteBar from "@/components/SiteBar";
 import { getAuthors, getLatestPosts, type Author } from "@/lib/api";
 import { authorUrl } from "@/lib/hosts";
 import { SITE_NAME } from "@/lib/site";
@@ -41,13 +41,7 @@ export default async function Home({ searchParams }: PageProps<"/">) {
 
   return (
     <>
-      <header className="border-b border-line">
-        <div className="mx-auto flex h-14 max-w-[1120px] items-center px-4 sm:px-6">
-          <Link href="/" className="text-[1.0625rem] font-bold tracking-[-0.02em]">
-            {SITE_NAME}
-          </Link>
-        </div>
-      </header>
+      <SiteBar />
 
       <main className="mx-auto w-full max-w-[1120px] flex-1 px-4 sm:px-6">
         {page === 1 && (

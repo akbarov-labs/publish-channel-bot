@@ -1,0 +1,620 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-02T01:15:11+00:00",
+  "title": "Design System: Channels",
+  "extensions": {
+    "colorMeta": {
+      "bg": {
+        "role": "neutral",
+        "displayName": "Paper White",
+        "canonical": "#ffffff",
+        "oklch": "oklch(100.0% 0.000 89.9)",
+        "tonalRamp": [
+          "#0b0b0b",
+          "#252525",
+          "#424242",
+          "#616161",
+          "#828282",
+          "#a5a5a5",
+          "#c9c9c9",
+          "#eeeeee"
+        ],
+        "mode": "light",
+        "cssVar": "--bg"
+      },
+      "surface": {
+        "role": "neutral",
+        "displayName": "Warm Off-White",
+        "canonical": "#f5f5f2",
+        "oklch": "oklch(96.9% 0.004 106.5)",
+        "tonalRamp": [
+          "#0b0b09",
+          "#252523",
+          "#424240",
+          "#61615f",
+          "#828280",
+          "#a5a5a2",
+          "#c9c9c6",
+          "#efefec"
+        ],
+        "mode": "light",
+        "cssVar": "--surface"
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Near-Black Ink",
+        "canonical": "#1d1d1b",
+        "oklch": "oklch(23.0% 0.004 106.7)",
+        "tonalRamp": [
+          "#0b0b09",
+          "#252523",
+          "#424240",
+          "#61615f",
+          "#828280",
+          "#a5a5a2",
+          "#c9c9c6",
+          "#efefec"
+        ],
+        "mode": "light",
+        "cssVar": "--ink"
+      },
+      "ink-soft": {
+        "role": "neutral",
+        "displayName": "Soft Ink",
+        "canonical": "#3d3d3a",
+        "oklch": "oklch(35.9% 0.005 106.7)",
+        "tonalRamp": [
+          "#0b0b09",
+          "#252522",
+          "#42423f",
+          "#61615e",
+          "#82827f",
+          "#a5a5a2",
+          "#c9c9c6",
+          "#efefeb"
+        ],
+        "mode": "light",
+        "cssVar": "--ink-soft"
+      },
+      "muted": {
+        "role": "neutral",
+        "displayName": "Warm Grey",
+        "canonical": "#6b6b66",
+        "oklch": "oklch(52.6% 0.008 106.7)",
+        "tonalRamp": [
+          "#0b0b08",
+          "#252521",
+          "#42423e",
+          "#62625d",
+          "#83837d",
+          "#a5a5a0",
+          "#c9c9c4",
+          "#efefe9"
+        ],
+        "mode": "light",
+        "cssVar": "--muted"
+      },
+      "line": {
+        "role": "neutral",
+        "displayName": "Hairline",
+        "canonical": "#e7e7e3",
+        "oklch": "oklch(92.7% 0.005 106.5)",
+        "tonalRamp": [
+          "#0b0b09",
+          "#252522",
+          "#42423f",
+          "#61615e",
+          "#82827f",
+          "#a5a5a1",
+          "#c9c9c5",
+          "#efefeb"
+        ],
+        "mode": "light",
+        "cssVar": "--line"
+      },
+      "accent": {
+        "role": "primary",
+        "displayName": "Telegram-Follow Green",
+        "canonical": "#1a7f37",
+        "oklch": "oklch(52.4% 0.140 148.0)",
+        "tonalRamp": [
+          "#001002",
+          "#032e0f",
+          "#01511c",
+          "#06752e",
+          "#3a984f",
+          "#60bd71",
+          "#85e294",
+          "#c8ffcf"
+        ],
+        "mode": "light",
+        "cssVar": "--accent"
+      },
+      "on-accent": {
+        "role": "primary",
+        "displayName": "On-Green Text",
+        "canonical": "#ffffff",
+        "oklch": "oklch(100.0% 0.000 89.9)",
+        "tonalRamp": [
+          "#0b0b0b",
+          "#252525",
+          "#424242",
+          "#616161",
+          "#828282",
+          "#a5a5a5",
+          "#c9c9c9",
+          "#eeeeee"
+        ],
+        "mode": "light",
+        "cssVar": "--on-accent"
+      },
+      "bg-dark": {
+        "role": "neutral",
+        "displayName": "Night Paper",
+        "canonical": "#121211",
+        "oklch": "oklch(18.2% 0.002 106.6)",
+        "tonalRamp": [
+          "#0b0b0a",
+          "#252524",
+          "#424241",
+          "#616160",
+          "#828281",
+          "#a5a5a4",
+          "#c9c9c8",
+          "#eeeeed"
+        ],
+        "mode": "dark",
+        "cssVar": "--bg"
+      },
+      "surface-dark": {
+        "role": "neutral",
+        "displayName": "Lifted Night",
+        "canonical": "#1c1c1a",
+        "oklch": "oklch(22.6% 0.004 106.7)",
+        "tonalRamp": [
+          "#0b0b09",
+          "#252523",
+          "#424240",
+          "#61615f",
+          "#828280",
+          "#a5a5a2",
+          "#c9c9c6",
+          "#efefec"
+        ],
+        "mode": "dark",
+        "cssVar": "--surface"
+      },
+      "ink-dark": {
+        "role": "neutral",
+        "displayName": "Bone Ink",
+        "canonical": "#ecece8",
+        "oklch": "oklch(94.2% 0.005 106.5)",
+        "tonalRamp": [
+          "#0b0b09",
+          "#252522",
+          "#42423f",
+          "#61615e",
+          "#82827f",
+          "#a5a5a1",
+          "#c9c9c5",
+          "#efefeb"
+        ],
+        "mode": "dark",
+        "cssVar": "--ink"
+      },
+      "ink-soft-dark": {
+        "role": "neutral",
+        "displayName": "Soft Bone Ink",
+        "canonical": "#cfcfca",
+        "oklch": "oklch(85.3% 0.007 106.5)",
+        "tonalRamp": [
+          "#0b0b08",
+          "#252522",
+          "#42423e",
+          "#61615d",
+          "#83837e",
+          "#a5a5a0",
+          "#c9c9c4",
+          "#efefea"
+        ],
+        "mode": "dark",
+        "cssVar": "--ink-soft"
+      },
+      "muted-dark": {
+        "role": "neutral",
+        "displayName": "Night Grey",
+        "canonical": "#9c9c96",
+        "oklch": "oklch(69.1% 0.009 106.6)",
+        "tonalRamp": [
+          "#0b0b07",
+          "#252521",
+          "#42423d",
+          "#62625c",
+          "#83837d",
+          "#a5a59f",
+          "#cacac3",
+          "#efefe8"
+        ],
+        "mode": "dark",
+        "cssVar": "--muted"
+      },
+      "line-dark": {
+        "role": "neutral",
+        "displayName": "Night Hairline",
+        "canonical": "#2a2a27",
+        "oklch": "oklch(28.4% 0.005 106.7)",
+        "tonalRamp": [
+          "#0b0b09",
+          "#252522",
+          "#42423f",
+          "#61615e",
+          "#82827f",
+          "#a5a5a1",
+          "#c9c9c5",
+          "#efefeb"
+        ],
+        "mode": "dark",
+        "cssVar": "--line"
+      },
+      "accent-dark": {
+        "role": "primary",
+        "displayName": "Telegram-Follow Green, Night",
+        "canonical": "#4cc36a",
+        "oklch": "oklch(72.9% 0.166 148.9)",
+        "tonalRamp": [
+          "#001003",
+          "#022e0f",
+          "#0b5021",
+          "#177434",
+          "#159c45",
+          "#49c168",
+          "#72e68b",
+          "#cbfed2"
+        ],
+        "mode": "dark",
+        "cssVar": "--accent"
+      },
+      "on-accent-dark": {
+        "role": "primary",
+        "displayName": "On-Green Text, Night",
+        "canonical": "#0b1a0f",
+        "oklch": "oklch(20.0% 0.030 151.4)",
+        "tonalRamp": [
+          "#030f05",
+          "#1a291e",
+          "#36473a",
+          "#556659",
+          "#768879",
+          "#98ab9c",
+          "#bccfbf",
+          "#e0f5e4"
+        ],
+        "mode": "dark",
+        "cssVar": "--on-accent"
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "The root directory heading only, capped at 18ch."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Post titles (2rem to 2.75rem) and the author name on their home (2rem to 2.625rem)."
+      },
+      "title-featured": {
+        "displayName": "Title Featured",
+        "purpose": "The newest post on an author home."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Feed-row titles, neighbour links, in-page titles."
+      },
+      "prose": {
+        "displayName": "Prose",
+        "purpose": "Article body at a 680px measure; 1.125rem/1.72 on phones, 1.25rem/1.75 from 640px. Headings inside prose switch to Golos 700."
+      },
+      "lede": {
+        "displayName": "Lede",
+        "purpose": "Root intro, author bios, featured excerpts, in soft ink."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "UI copy, muted feed excerpts, sentence-case section labels at 600."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Pill text and feed-row bylines."
+      },
+      "meta": {
+        "displayName": "Meta",
+        "purpose": "Muted date, type and count lines with tabular figures and centred-dot separators."
+      }
+    },
+    "fonts": [
+      {
+        "name": "Golos Text",
+        "source": "next/font/google",
+        "variable": "--font-golos",
+        "subsets": [
+          "latin",
+          "latin-ext",
+          "cyrillic",
+          "cyrillic-ext"
+        ]
+      },
+      {
+        "name": "Literata",
+        "source": "next/font/google",
+        "variable": "--font-literata",
+        "axes": [
+          "opsz"
+        ],
+        "styles": [
+          "normal",
+          "italic"
+        ],
+        "subsets": [
+          "latin",
+          "latin-ext",
+          "cyrillic",
+          "cyrillic-ext"
+        ]
+      },
+      {
+        "name": "Literata Okina",
+        "source": "src/app/fonts/literata-okina-{normal,italic}.woff2",
+        "variable": "--font-literata-okina",
+        "unicodeRange": "U+02BB",
+        "preload": false,
+        "purpose": "Maps only U+02BB to Literata's own turned comma, because Literata ships U+02BB with zero advance width. First in --font-serif."
+      },
+      {
+        "name": "Monospace",
+        "stack": "ui-monospace, SFMono-Regular, Menlo, Consolas, monospace",
+        "purpose": "Inline code (0.85em) and code blocks (0.8em) in prose."
+      }
+    ],
+    "avatarGrounds": [
+      {
+        "name": "sand",
+        "value": "#e9dccb"
+      },
+      {
+        "name": "mist",
+        "value": "#d3e1ea"
+      },
+      {
+        "name": "sage",
+        "value": "#d9e6d2"
+      },
+      {
+        "name": "mauve",
+        "value": "#e7d6e2"
+      },
+      {
+        "name": "straw",
+        "value": "#e8e2c6"
+      },
+      {
+        "name": "lavender",
+        "value": "#d8dbe9"
+      },
+      {
+        "name": "initials-ink",
+        "value": "#2b2b28"
+      }
+    ],
+    "shadows": [
+      {
+        "name": "floating-control",
+        "value": "0 2px 10px rgb(0 0 0 / 0.18)",
+        "purpose": "Gallery previous/next buttons over photos only."
+      }
+    ],
+    "overlays": [
+      {
+        "name": "media-badge",
+        "value": "rgb(0 0 0 / 0.65)",
+        "purpose": "Photo-count and video badges, gallery counter, white text."
+      },
+      {
+        "name": "selection",
+        "value": "color-mix(in srgb, var(--accent) 22%, transparent)",
+        "purpose": "Text selection."
+      }
+    ],
+    "focus": {
+      "value": "outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 4px",
+      "purpose": "Every interactive element."
+    },
+    "motion": [
+      {
+        "name": "state",
+        "value": "150ms ease-out",
+        "purpose": "Colour, border, filter and transform changes on links, pills and thumbnails."
+      },
+      {
+        "name": "spoiler",
+        "value": "200ms ease-out",
+        "purpose": "Telegram spoiler reveal."
+      },
+      {
+        "name": "featured-cover",
+        "value": "500ms ease-out, scale(1.015)",
+        "purpose": "Featured cover hover."
+      },
+      {
+        "name": "press",
+        "value": "scale(0.98)",
+        "purpose": "Follow pill :active."
+      },
+      {
+        "name": "reduced-motion",
+        "value": "transition/animation 0.01ms",
+        "purpose": "All motion collapses under prefers-reduced-motion."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "sm",
+        "value": "640px"
+      },
+      {
+        "name": "lg",
+        "value": "1024px"
+      }
+    ],
+    "themes": {
+      "strategy": "prefers-color-scheme",
+      "default": "light",
+      "themeColor": {
+        "light": "#ffffff",
+        "dark": "#121211"
+      }
+    }
+  },
+  "components": [
+    {
+      "name": "Follow Button",
+      "kind": "button",
+      "refersTo": "button-follow",
+      "description": "The one primary action: follow the author's Telegram channel. 32px in bars, 40px with \"Follow on Telegram\" elsewhere.",
+      "html": "<a class=\"ds-btn-follow\" href=\"#\"><svg viewBox=\"0 0 24 24\" fill=\"currentColor\" aria-hidden=\"true\" width=\"16\" height=\"16\"><path d=\"M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z\"/></svg>Follow</a>",
+      "css": ".ds-btn-follow { display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 12px; border-radius: 9999px; background: var(--accent, #1a7f37); color: var(--on-accent, #ffffff); font-family: var(--font-golos, 'Golos Text'), ui-sans-serif, system-ui, sans-serif; font-size: 0.8125rem; font-weight: 500; text-decoration: none; transition: filter 150ms ease-out, transform 150ms ease-out; } .ds-btn-follow:hover { filter: brightness(1.1); } .ds-btn-follow:active { transform: scale(0.98); } .ds-btn-follow:focus-visible { outline: 2px solid var(--accent, #1a7f37); outline-offset: 3px; }"
+    },
+    {
+      "name": "Outline Pill",
+      "kind": "button",
+      "refersTo": "button-outline",
+      "description": "Secondary small actions: Share, All posts, pagination.",
+      "html": "<button type=\"button\" class=\"ds-btn-outline\">Share</button>",
+      "css": ".ds-btn-outline { display: inline-flex; align-items: center; height: 32px; padding: 0 12px; border-radius: 9999px; border: 1px solid var(--line, #e7e7e3); background: var(--bg, #ffffff); color: var(--ink, #1d1d1b); font-family: var(--font-golos, 'Golos Text'), ui-sans-serif, system-ui, sans-serif; font-size: 0.8125rem; font-weight: 500; cursor: pointer; transition: border-color 150ms ease-out; } .ds-btn-outline:hover { border-color: var(--ink, #1d1d1b); } .ds-btn-outline:focus-visible { outline: 2px solid var(--accent, #1a7f37); outline-offset: 3px; }"
+    },
+    {
+      "name": "Ink Pill",
+      "kind": "button",
+      "refersTo": "button-ink",
+      "description": "A single page-level exit action, as on the 404.",
+      "html": "<a class=\"ds-btn-ink\" href=\"#\">Browse authors</a>",
+      "css": ".ds-btn-ink { display: inline-flex; align-items: center; height: 40px; padding: 0 16px; border-radius: 9999px; background: var(--ink, #1d1d1b); color: var(--bg, #ffffff); font-family: var(--font-golos, 'Golos Text'), ui-sans-serif, system-ui, sans-serif; font-size: 0.9375rem; font-weight: 500; text-decoration: none; transition: opacity 150ms ease-out; } .ds-btn-ink:hover { opacity: 0.85; } .ds-btn-ink:focus-visible { outline: 2px solid var(--accent, #1a7f37); outline-offset: 3px; }"
+    },
+    {
+      "name": "Author Bar",
+      "kind": "nav",
+      "refersTo": "author-bar",
+      "description": "Sticky 56px bar on every page of an author space: avatar and name left, Follow right.",
+      "html": "<header class=\"ds-authorbar\"><a class=\"ds-authorbar-id\" href=\"#\"><span class=\"ds-authorbar-av\">DO</span><span>Author Name</span></a><a class=\"ds-authorbar-follow\" href=\"#\"><svg viewBox=\"0 0 24 24\" fill=\"currentColor\" aria-hidden=\"true\" width=\"16\" height=\"16\"><path d=\"M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z\"/></svg>Follow</a></header>",
+      "css": ".ds-authorbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; height: 56px; padding: 0 16px; background: var(--bg, #ffffff); border-bottom: 1px solid var(--line, #e7e7e3); font-family: var(--font-golos, 'Golos Text'), ui-sans-serif, system-ui, sans-serif; } .ds-authorbar-id { display: flex; align-items: center; gap: 10px; color: var(--ink, #1d1d1b); text-decoration: none; font-size: 0.9375rem; font-weight: 600; letter-spacing: -0.01em; } .ds-authorbar-av { display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: 9999px; background: #e9dccb; color: #2b2b28; font-size: 11px; font-weight: 600; } .ds-authorbar-follow { display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 12px; border-radius: 9999px; background: var(--accent, #1a7f37); color: var(--on-accent, #ffffff); font-size: 0.8125rem; font-weight: 500; text-decoration: none; transition: filter 150ms ease-out; } .ds-authorbar-follow:hover { filter: brightness(1.1); } .ds-authorbar-id:focus-visible, .ds-authorbar-follow:focus-visible { outline: 2px solid var(--accent, #1a7f37); outline-offset: 3px; }"
+    },
+    {
+      "name": "Post Row",
+      "kind": "card",
+      "refersTo": "post-row",
+      "description": "The feed unit: no card, a hairline below, text left and an optional 4px-radius thumbnail right.",
+      "html": "<article class=\"ds-row\"><div class=\"ds-row-text\"><h3 class=\"ds-row-title\"><a href=\"#\">Книжный развал у Дома печати</a></h3><p class=\"ds-row-excerpt\">Субботний развал: старые издания, открытки, пластинки.</p><p class=\"ds-row-meta\"><time>23 Sept</time><span aria-hidden=\"true\">·</span><span>7 photos</span></p></div><div class=\"ds-row-thumb\"><span class=\"ds-row-badge\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" width=\"14\" height=\"14\" aria-hidden=\"true\"><rect x=\"3\" y=\"5\" width=\"15\" height=\"13\" rx=\"2\"/><path d=\"M21 8v10a3 3 0 0 1-3 3H7\"/><path d=\"m3 15 4-4 4 4 2-2 5 5\"/></svg>7</span></div></article>",
+      "css": ".ds-row { display: flex; gap: 40px; padding: 28px 0; border-bottom: 1px solid var(--line, #e7e7e3); font-family: var(--font-golos, 'Golos Text'), ui-sans-serif, system-ui, sans-serif; color: var(--ink, #1d1d1b); } .ds-row-text { flex: 1; min-width: 0; } .ds-row-title { margin: 0; font-size: 1.3125rem; line-height: 1.375; font-weight: 700; letter-spacing: -0.021em; text-wrap: balance; } .ds-row-title a { color: inherit; text-decoration: none; } .ds-row:hover .ds-row-title a { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 4px; } .ds-row-title a:focus-visible { outline: 2px solid var(--accent, #1a7f37); outline-offset: 3px; } .ds-row-excerpt { margin: 6px 0 0; font-size: 1rem; line-height: 1.625; color: var(--muted, #6b6b66); } .ds-row-meta { display: flex; gap: 6px; margin: 12px 0 0; font-size: 0.8125rem; color: var(--muted, #6b6b66); font-variant-numeric: tabular-nums; } .ds-row-thumb { position: relative; flex-shrink: 0; width: 160px; height: 108px; margin-top: 4px; border-radius: 4px; background: var(--surface, #f5f5f2); overflow: hidden; } .ds-row-badge { position: absolute; left: 6px; bottom: 6px; display: inline-flex; align-items: center; gap: 4px; padding: 2px 6px; border-radius: 9999px; background: rgb(0 0 0 / 0.65); color: #fff; font-size: 0.6875rem; font-weight: 500; }"
+    },
+    {
+      "name": "Gallery Thumbnails",
+      "kind": "custom",
+      "refersTo": "gallery-thumb",
+      "description": "Album thumbnail strip: active gets a 2px ink ring offset 2px; inactive stay full opacity, dimmed and desaturated.",
+      "html": "<div class=\"ds-thumbs\"><button type=\"button\" class=\"ds-thumb\" aria-current=\"true\" aria-label=\"Show photo 1\"></button><button type=\"button\" class=\"ds-thumb\" aria-label=\"Show photo 2\"></button><button type=\"button\" class=\"ds-thumb\" aria-label=\"Show photo 3\"></button></div>",
+      "css": ".ds-thumbs { display: flex; gap: 8px; padding: 6px 4px; } .ds-thumb { width: 64px; height: 64px; flex-shrink: 0; border: 0; padding: 0; border-radius: 4px; background: linear-gradient(135deg, #c9b79a, #6f8a9c); cursor: pointer; filter: brightness(0.88) saturate(0.55); transition: filter 150ms ease-out; } .ds-thumb:hover { filter: none; } .ds-thumb[aria-current='true'] { filter: none; box-shadow: 0 0 0 2px var(--bg, #ffffff), 0 0 0 4px var(--ink, #1d1d1b); } .ds-thumb:focus-visible { outline: 2px solid var(--accent, #1a7f37); outline-offset: 3px; }"
+    },
+    {
+      "name": "Gallery Arrow",
+      "kind": "button",
+      "refersTo": "gallery-thumb",
+      "description": "The only shadowed element: a 44px floating control laid over album photos.",
+      "html": "<div class=\"ds-arrow-stage\"><button type=\"button\" class=\"ds-arrow\" aria-label=\"Next photo\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" width=\"20\" height=\"20\" aria-hidden=\"true\"><path d=\"m9 18 6-6-6-6\"/></svg></button></div>",
+      "css": ".ds-arrow-stage { display: flex; align-items: center; justify-content: flex-end; height: 120px; padding: 0 12px; border-radius: 6px; background: linear-gradient(135deg, #6f8a9c, #2d3a33); } .ds-arrow { display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; border: 0; border-radius: 9999px; background: color-mix(in srgb, var(--bg, #ffffff) 95%, transparent); color: var(--ink, #1d1d1b); box-shadow: 0 2px 10px rgb(0 0 0 / 0.18); cursor: pointer; transition: transform 150ms ease-out, opacity 150ms ease-out; } .ds-arrow:hover { transform: scale(1.05); } .ds-arrow:focus-visible { outline: 2px solid var(--accent, #1a7f37); outline-offset: 3px; }"
+    },
+    {
+      "name": "Prose Sample",
+      "kind": "custom",
+      "refersTo": "post-row",
+      "description": "Article body: Literata at 1.25rem/1.75 on a 680px measure, sans headings, the 3px ink blockquote rule, underlined links that turn green.",
+      "html": "<div class=\"ds-prose\"><h2>Деревья как архитектура</h2><p>Чинары во дворах сажали ещё в шестидесятых. <a href=\"#\">Oʻzbekiston</a> va gʻalaba.</p><blockquote><p>Двор — это не пространство между домами. Это ещё одна комната.</p></blockquote></div>",
+      "css": ".ds-prose { max-width: 680px; font-family: var(--font-literata-okina, 'Literata Okina'), var(--font-literata, Literata), ui-serif, Georgia, serif; font-size: 1.25rem; line-height: 1.75; color: var(--ink, #1d1d1b); } .ds-prose h2 { font-family: var(--font-golos, 'Golos Text'), ui-sans-serif, system-ui, sans-serif; font-weight: 700; font-size: 1.55em; line-height: 1.25; letter-spacing: -0.018em; margin: 0 0 0.5em; } .ds-prose p { margin: 1.15em 0; } .ds-prose a { color: inherit; text-decoration: underline; text-decoration-thickness: 1px; text-decoration-color: color-mix(in srgb, var(--ink, #1d1d1b) 45%, transparent); text-underline-offset: 0.2em; transition: color 150ms ease-out, text-decoration-color 150ms ease-out; } .ds-prose a:hover { color: var(--accent, #1a7f37); text-decoration-color: var(--accent, #1a7f37); } .ds-prose a:focus-visible { outline: 2px solid var(--accent, #1a7f37); outline-offset: 3px; } .ds-prose blockquote { margin: 1.6em 0; padding-left: 1.1em; border-left: 3px solid var(--ink, #1d1d1b); font-style: italic; color: var(--ink-soft, #3d3d3a); } .ds-prose blockquote p { margin: 0.6em 0; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Author's Front Page",
+    "overview": "**Creative North Star: \"The Author's Front Page\"**\n\nA reading site built to the Substack and Medium bar and executed straight: white paper (or a true near-black at night), near-black ink, one green that only ever means \"follow\" or \"go\". The author's name, face and writing lead every screen; the platform shows itself only in a footer line. Nothing is a card. Posts are rows of type separated by hairlines, the reading body is a 20px serif at a 680px measure, and everything that is not reading (titles, bars, meta, buttons) speaks in one neutral sans.\n\nDensity is calm and editorial: generous vertical rhythm between feed rows, slim 56px bars, centred profile blocks, and media that is allowed to be wider than the text column (960px) without ever going full-bleed on desktop. A two-line note, a 20-photo album and a 5,000-word article all sit in the same feed grammar and each looks intended. Cyrillic, Uzbek Latin (with the U+02BB okina) and English share one voice; every face is chosen and patched so the three scripts look equally designed.\n\nThe world refuses the generic content template: no same-size thumbnail cards, no gradient heroes, no decorative colour. Light is the default and dark follows the reader's system setting, with every token redefined rather than inverted.",
+    "keyCharacteristics": [
+      "White and true-dark pages, near-black ink, a single green accent.",
+      "Serif for reading, neutral sans for everything else.",
+      "Hairline dividers between rows; no cards, no surface shadows.",
+      "Round avatars as the author's mark; pill buttons only for small actions.",
+      "Media may run wider than the text measure; the measure itself never exceeds 680px.",
+      "One primary call to action per region: follow the author's Telegram channel."
+    ],
+    "rules": [
+      {
+        "name": "The One Green Rule",
+        "body": "Green means \"follow\" or \"go\" and nothing else. It never fills a surface, a badge or a heading, and an author home carries exactly one green pill (the bar's Follow); the channel handle in the profile block is a green text link, not a second pill.",
+        "section": "colors"
+      },
+      {
+        "name": "The Redefine-Don't-Invert Rule",
+        "body": "Dark mode re-declares every token under `prefers-color-scheme: dark` with its own tuned value; nothing is produced by filters or opacity flips, and the browser theme colour follows the same two page values.",
+        "section": "colors"
+      },
+      {
+        "name": "The Serif-Reads, Sans-Speaks Rule",
+        "body": "Literata is for text a reader reads as the author's: the prose body, bios, ledes and the featured excerpt. Everything structural (titles, headings inside prose, bars, meta, buttons, captions, tables) is Golos. Feed-row excerpts stay sans and muted so the list scans.",
+        "section": "typography"
+      },
+      {
+        "name": "The Balanced Title Rule",
+        "body": "Every title is 700 weight, -0.021em tracking, `text-wrap: balance` and `overflow-wrap: anywhere`, because Telegram titles are a post's first line and can be long, chatty or one unbroken URL.",
+        "section": "typography"
+      },
+      {
+        "name": "The Okina Rule",
+        "body": "Literata ships U+02BB with zero advance width, so a local face (Literata Okina) that maps only U+02BB to Literata's own turned comma sits first in the serif stack, loaded by unicode-range and never preloaded. Any face added to the system must cover Latin, Latin Extended and Cyrillic, and must render oʻ and gʻ with a real advance before it ships.",
+        "section": "typography"
+      },
+      {
+        "name": "The Hairline Rule",
+        "body": "Rows, sections, bars and footers are separated by a 1px line in the line colour and by space, never by cards, fills or shadows.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Over-a-Photo Exception",
+        "body": "The only things allowed to float are controls and badges laid over imagery: the gallery arrows (page-colour circle at 95% with the floating-control shadow) and the media badges and counter (black at 65% with white text).",
+        "section": "elevation"
+      },
+      {
+        "name": "The Blockquote Rule",
+        "body": "A quotation in prose is set off by a 3px solid ink rule on its left, 1.1em of inner space, italic Literata in soft ink, and 1.6em of margin above and below. It is the prose's own quoting device and belongs to quoted text inside the article body.",
+        "section": "components"
+      },
+      {
+        "name": "The Full-Colour Thumbnail Rule",
+        "body": "Inactive gallery thumbnails are never faded with opacity; they are dimmed and desaturated so every photo stays legible and the active ring is the only state marker.",
+        "section": "components"
+      }
+    ],
+    "dos": [
+      "Do give every author space the author bar, with their avatar and name on the left and one Follow pill on the right.",
+      "Do separate feed items with 1px hairlines and 28px of vertical space, and keep every post type (note, album, video, long read) in the same Post Row grammar.",
+      "Do set reading text in Literata at 1.125rem (1.25rem from 640px) on a 680px measure, and everything structural in Golos Text.",
+      "Do let covers, albums and video widen to 960px while the text stays at 680px.",
+      "Do carry dates, read times and counts in the muted meta line with tabular figures and centred-dot separators.",
+      "Do redefine every colour token for dark mode and check both themes.",
+      "Do test new type against Cyrillic, Uzbek Latin with oʻ and gʻ, and English in the same view."
+    ],
+    "donts": [
+      "Don't put posts in cards, tiles or shadowed boxes, or show a grid of same-size thumbnail cards.",
+      "Don't use the green accent for decoration, headings, badges or fills beyond the Follow pill, links, focus and selection.",
+      "Don't add a second green pill to a region that already has one; the author home's channel handle is a text link.",
+      "Don't cast shadows on content; the floating-control shadow belongs only to controls laid over photos.",
+      "Don't fade inactive gallery thumbnails with opacity.",
+      "Don't let the platform's name or branding appear in an author's bar or profile block; it lives in the footer line.",
+      "Don't invent author names, follower counts, view counts or testimonials on shipped pages."
+    ]
+  }
+}
