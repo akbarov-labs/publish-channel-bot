@@ -6,6 +6,7 @@ use App\Models\User;
 use Filament\Actions\Action;
 use Filament\Auth\Pages\EditProfile as BaseEditProfile;
 use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
@@ -54,6 +55,14 @@ class EditProfile extends BaseEditProfile
                             ->placeholder('@yourchannel')
                             ->maxLength(255)
                             ->helperText('Linked from your space so readers can follow the channel.'),
+                        Select::make('locale')
+                            ->label('Site language')
+                            ->options(User::LOCALES)
+                            ->in(array_keys(User::LOCALES))
+                            ->default('uz')
+                            ->required()
+                            ->selectablePlaceholder(false)
+                            ->helperText('The language of buttons, labels and dates on your space. Your posts stay in the language you write them in.'),
                     ]),
 
                 Section::make('Account')

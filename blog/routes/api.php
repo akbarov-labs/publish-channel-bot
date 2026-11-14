@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\BotMediaController;
 use App\Http\Controllers\Api\BotPostController;
 use App\Http\Controllers\Api\PublicPostController;
+use App\Http\Controllers\Api\TlsAskController;
 use Illuminate\Support\Facades\Route;
 
 // Consumed by the Telegram sync bot. The base URL an author gives the bot is
@@ -13,6 +14,10 @@ Route::prefix('telegram')->middleware('bot.auth')->group(function () {
     Route::patch('/posts/{post}', [BotPostController::class, 'update']);
     Route::post('/media', [BotMediaController::class, 'store']);
 });
+
+// Asked by the edge Caddy before it gets a certificate for an author's host.
+// Reached over the Docker network; the public route is blocked at Caddy.
+Route::get('/tls/allowed', TlsAskController::class);
 
 // Consumed by the Next.js frontend.
 Route::prefix('public')->group(function () {

@@ -1,13 +1,15 @@
 "use client";
 
 import { useState } from "react";
+import { dict, type Locale } from "@/lib/i18n";
 
 /**
  * Readers mostly arrive from Telegram and pass links on. Phones get the native
  * share sheet; elsewhere the link is copied.
  */
-export default function ShareButton({ url, title }: { url: string; title: string }) {
+export default function ShareButton({ url, title, locale }: { url: string; title: string; locale: Locale }) {
   const [copied, setCopied] = useState(false);
+  const t = dict(locale);
 
   const share = async () => {
     if (navigator.share && window.matchMedia("(pointer: coarse)").matches) {
@@ -24,7 +26,7 @@ export default function ShareButton({ url, title }: { url: string; title: string
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      window.prompt("Copy this link", url);
+      window.prompt(t.copyThisLink, url);
     }
   };
 
@@ -35,7 +37,7 @@ export default function ShareButton({ url, title }: { url: string; title: string
       aria-live="polite"
       className="inline-flex h-8 items-center rounded-full border border-line px-3 text-[0.8125rem] font-medium transition-colors hover:border-ink"
     >
-      {copied ? "Link copied" : "Share"}
+      {copied ? t.linkCopied : t.share}
     </button>
   );
 }

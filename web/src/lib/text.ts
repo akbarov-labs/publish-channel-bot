@@ -1,22 +1,5 @@
 import type { PostSummary } from "@/lib/api";
-
-const TIME_ZONE = process.env.SITE_TIME_ZONE ?? "UTC";
-
-const sameYear = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", timeZone: TIME_ZONE });
-const otherYear = new Intl.DateTimeFormat("en-GB", {
-  day: "numeric",
-  month: "short",
-  year: "numeric",
-  timeZone: TIME_ZONE,
-});
-
-/** "3 Oct", or "3 Oct 2025" outside the current year. */
-export function formatDate(value: string | null | undefined): string {
-  if (!value) return "";
-  const date = new Date(value);
-  const format = date.getUTCFullYear() === new Date().getUTCFullYear() ? sameYear : otherYear;
-  return format.format(date);
-}
+import type { Dictionary } from "@/lib/i18n";
 
 export function stripTags(html: string): string {
   return html
@@ -75,12 +58,9 @@ export function photoCount(post: Pick<PostSummary, "media">): number {
 }
 
 /** What kind of post this is, in plain words, or null for an ordinary article. */
-export function typeLabel(post: Pick<PostSummary, "post_type" | "media">): string | null {
-  if (post.post_type === "gallery") {
-    const count = photoCount(post);
-    return count === 1 ? "1 photo" : `${count} photos`;
-  }
-  if (post.post_type === "video") return "Video";
+export function typeLabel(post: Pick<PostSummary, "post_type" | "media">, t: Dictionary): string | null {
+  if (post.post_type === "gallery") return t.photos(photoCount(post));
+  if (post.post_type === "video") return t.video;
   return null;
 }
 

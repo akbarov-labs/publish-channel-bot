@@ -78,9 +78,9 @@ The author then opens **Profile** in the admin to pick a username (their
 subdomain), add a bio, avatar and channel link, and generate a bot token.
 
 Browsers resolve `*.localhost` to your machine, so author spaces work locally
-without DNS. In production, point a wildcard record `*.example.com` at the web
-service and set `ROOT_URL=https://example.com` for it and
-`FRONTEND_URL=https://example.com` for the blog.
+without DNS. In production every address derives from one `DOMAIN`: authors
+at `<username>.DOMAIN` with certificates issued on first visit, the admin at
+`admin.DOMAIN`, the bot at `bot.DOMAIN` ([DEPLOY.md](DEPLOY.md)).
 
 Demo authors and posts in Russian, Uzbek and English, for local work only:
 
@@ -112,16 +112,32 @@ docker compose run --rm bot python -c \
 
 ## Tests
 
+The images leave tests out, so they are mounted in:
+
 ```bash
-docker compose run --rm bot sh -c "pip install -q pytest pytest-asyncio && python -m pytest -q"
-docker compose run --rm -v "$PWD/blog/tests:/srv/tests:ro" blog php artisan test
+docker compose run --rm -v "$PWD/bot/tests:/srv/tests:ro" -v "$PWD/bot/pyproject.toml:/srv/pyproject.toml:ro" \
+  -u root bot sh -c "pip install -q pytest pytest-asyncio && python -m pytest -q"
+docker run --rm -v "$PWD/blog/tests:/srv/tests:ro" -v "$PWD/blog/.env.example:/srv/.env:ro" \
+  -e APP_KEY=base64:$(openssl rand -base64 32) --entrypoint php publish-channel-bot-blog artisan test
 docker compose run --rm web npm run build
 ```
 
-## Still to do
+Run the blog's with plain `docker run`, not `docker compose run`: compose
+injects `blog/.env`, whose `QUEUE_CONNECTION` overrides the tests' `sync`.
+CI runs all three on every push and pull request, and also migrates a real
+Postgres, since the tests use SQLite.
 
-- The reader site's interface text is English; post content keeps its own
-  language (`lang` is guessed per post for hyphenation and screen readers).
+## Deploying
+
+To the Contabo server, through staging, the same way as the other apps
+there: [DEPLOY.md](DEPLOY.md).
+
+## Notes
+
+- The reader site's interface speaks Uzbek, Russian or English; each author
+  picks theirs on the admin **Profile**, and `DEFAULT_LOCALE` sets the root
+  directory's. Post content keeps its own language (`lang` is guessed per
+  post for hyphenation and screen readers).
 - `TELEGRAM_API_TOKEN` in the blog's `.env` still works and acts for the first
   author, so single-author installs keep syncing after the upgrade. New authors
   should use per-author tokens from their profile.

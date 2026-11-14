@@ -44,7 +44,9 @@ async def lifespan(_: FastAPI):
             url,
             secret_token=settings.telegram_webhook_secret,
             allowed_updates=dispatcher.resolve_used_update_types(),
-            drop_pending_updates=True,
+            # Telegram holds updates while the bot restarts for a deploy;
+            # dropping them would lose every channel post made meanwhile.
+            drop_pending_updates=False,
         )
         log.info("telegram webhook set to %s", url)
     else:
@@ -65,7 +67,14 @@ async def lifespan(_: FastAPI):
         await bot.session.close()
 
 
-app = FastAPI(title="publish-channel-bot", lifespan=lifespan)
+# Public at bot.<domain>: only the two webhooks and /health, no API explorer.
+app = FastAPI(
+    title="publish-channel-bot",
+    lifespan=lifespan,
+    docs_url=None,
+    redoc_url=None,
+    openapi_url=None,
+)
 
 
 @app.get("/health")

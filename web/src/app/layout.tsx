@@ -1,6 +1,9 @@
 import type { Metadata, Viewport } from "next";
 import { Golos_Text, Literata } from "next/font/google";
 import localFont from "next/font/local";
+import LocaleProvider from "@/components/LocaleProvider";
+import { defaultLocale, dict } from "@/lib/i18n";
+import { requestLocale } from "@/lib/request";
 import { SITE_NAME } from "@/lib/site";
 import "./globals.css";
 
@@ -40,7 +43,7 @@ const literataOkina = localFont({
 
 export const metadata: Metadata = {
   title: { default: SITE_NAME, template: `%s · ${SITE_NAME}` },
-  description: "Writing from Telegram channels, each author on their own page.",
+  description: dict(defaultLocale()).siteDescription,
 };
 
 export const viewport: Viewport = {
@@ -50,10 +53,16 @@ export const viewport: Viewport = {
   ],
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+// The interface language: the author's choice on their subdomain, the site
+// default on the root domain. Post bodies carry their own lang attribute.
+export default async function RootLayout({ children }: LayoutProps<"/">) {
+  const locale = await requestLocale();
+
   return (
-    <html lang="en" className={`${golos.variable} ${literata.variable} ${literataOkina.variable} antialiased`}>
-      <body className="flex min-h-dvh flex-col bg-bg text-ink">{children}</body>
+    <html lang={locale} className={`${golos.variable} ${literata.variable} ${literataOkina.variable} antialiased`}>
+      <body className="flex min-h-dvh flex-col bg-bg text-ink">
+        <LocaleProvider locale={locale}>{children}</LocaleProvider>
+      </body>
     </html>
   );
 }

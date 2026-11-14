@@ -1,0 +1,162 @@
+# Staging copy of docker-compose.prod.yml, for the same server. Lives at
+# /opt/apps/publish-channel-bot-staging/docker-compose.staging.yml,
+# root-owned, next to staging's own .env (set up by `sudo add-app`; see
+# DEPLOY.md).
+#
+# Same images as production: CI deploys each build here first, and
+# production gets that exact tag only when someone runs "Promote to
+# production". What differs:
+#
+# - DOMAIN is publish-channel-bot.staging.sarvarlogs.uz, so authors are at
+#   <author>.publish-channel-bot.staging.sarvarlogs.uz;
+# - its own databases and media (volumes named after this folder), empty at
+#   first: never a copy of production's, which holds every author's tokens;
+# - its own test bot from BotFather (add-app blanks BOT_TOKEN; deploy-app
+#   refuses production's);
+# - a login prompt on the reader site (user `staging`; add-app replaces
+#   STAGING_AUTH_HASH). Not on admin. or bot.: the bot authenticates to the
+#   blog API with its own bearer token in the same header a password would
+#   use, and Telegram cannot answer a prompt. The admin has its own login;
+# - noindex everywhere, no backup service.
+
+x-logging: &default-logging
+  driver: json-file
+  options: { max-size: "10m", max-file: "3" }
+
+networks:
+  default: {}
+  edge:
+    external: true
+
+services:
+  bot-db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: bot
+      POSTGRES_PASSWORD: ${BOT_DB_PASSWORD:?set BOT_DB_PASSWORD in .env}
+      POSTGRES_DB: bot
+    volumes:
+      - bot_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U bot -d bot"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    mem_limit: 192m
+    logging: *default-logging
+
+  blog-db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: blog
+      POSTGRES_PASSWORD: ${BLOG_DB_PASSWORD:?set BLOG_DB_PASSWORD in .env}
+      POSTGRES_DB: blog
+    volumes:
+      - blog_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U blog -d blog"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    mem_limit: 192m
+    logging: *default-logging
+
+  bot:
+    image: ${IMAGE:-ghcr.io/akbarov-labs/publish-channel-bot}/bot:${IMAGE_TAG:-latest}
+    restart: unless-stopped
+    environment:
+      BOT_TOKEN: ${BOT_TOKEN:?set BOT_TOKEN in .env - a test bot from BotFather, never production's}
+      SECRET_KEY: ${BOT_SECRET_KEY:?set BOT_SECRET_KEY in .env}
+      DATABASE_URL: postgresql+asyncpg://bot:${BOT_DB_PASSWORD}@bot-db:5432/bot
+      PUBLIC_BASE_URL: https://bot.${DOMAIN:?set DOMAIN in .env}
+      TELEGRAM_MODE: webhook
+      TELEGRAM_WEBHOOK_SECRET: ${TELEGRAM_WEBHOOK_SECRET:?set TELEGRAM_WEBHOOK_SECRET in .env}
+    networks:
+      default: {}
+      edge: {}
+    labels:
+      caddy: bot.${DOMAIN}
+      caddy.header: X-Robots-Tag "noindex, nofollow"
+      caddy.reverse_proxy: "{{upstreams 8000}}"
+    depends_on:
+      bot-db: { condition: service_healthy }
+    mem_limit: 256m
+    logging: *default-logging
+
+  blog:
+    image: ${IMAGE:-ghcr.io/akbarov-labs/publish-channel-bot}/blog:${IMAGE_TAG:-latest}
+    restart: unless-stopped
+    environment:
+      APP_NAME: ${APP_NAME:-Channels (staging)}
+      APP_ENV: staging
+      APP_KEY: ${APP_KEY:?set APP_KEY in .env}
+      APP_DEBUG: "false"
+      APP_URL: https://admin.${DOMAIN}
+      FRONTEND_URL: https://${DOMAIN}
+      LOG_CHANNEL: stderr
+      LOG_LEVEL: ${LOG_LEVEL:-debug}
+      DB_CONNECTION: pgsql
+      DB_HOST: blog-db
+      DB_PORT: 5432
+      DB_DATABASE: blog
+      DB_USERNAME: blog
+      DB_PASSWORD: ${BLOG_DB_PASSWORD}
+      SESSION_DRIVER: database
+      SESSION_SECURE_COOKIE: "true"
+      SESSION_SAME_SITE: lax
+      CACHE_STORE: database
+      QUEUE_CONNECTION: database
+      FILESYSTEM_DISK: local
+      MAIL_MAILER: log
+      TLS_ASK_PEER_URL: http://pcb-tls-ask-production/api/tls/allowed
+    networks:
+      default:
+        aliases: [pcb-blog]
+      edge:
+        aliases: [pcb-tls-ask, pcb-tls-ask-staging]
+    labels:
+      caddy: admin.${DOMAIN}
+      caddy.header: X-Robots-Tag "noindex, nofollow"
+      caddy.respond: /api/tls/* 404
+      caddy.reverse_proxy: "{{upstreams 80}}"
+    volumes:
+      - blog_storage:/var/www/html/storage
+    depends_on:
+      blog-db: { condition: service_healthy }
+    mem_limit: 512m
+    logging: *default-logging
+
+  web:
+    image: ${IMAGE:-ghcr.io/akbarov-labs/publish-channel-bot}/web:${IMAGE_TAG:-latest}
+    restart: unless-stopped
+    environment:
+      BLOG_API_URL: http://pcb-blog/api
+      ROOT_URL: https://${DOMAIN}
+      DEFAULT_LOCALE: ${DEFAULT_LOCALE:-uz}
+      # The platform's name on the root directory and in footers.
+      SITE_NAME: ${SITE_NAME:-Channels}
+    networks:
+      default: {}
+      edge: {}
+    labels:
+      caddy_0: ${DOMAIN}
+      # Username "staging"; the password is whatever add-app hashed.
+      caddy_0.basic_auth.staging: STAGING_AUTH_HASH
+      caddy_0.header: X-Robots-Tag "noindex, nofollow"
+      caddy_0.reverse_proxy: "{{upstreams 3000}}"
+      caddy_1: "*.${DOMAIN}"
+      caddy_1.tls.on_demand: ""
+      caddy_1.basic_auth.staging: STAGING_AUTH_HASH
+      caddy_1.header: X-Robots-Tag "noindex, nofollow"
+      caddy_1.reverse_proxy: "{{upstreams 3000}}"
+    depends_on:
+      - blog
+    mem_limit: 384m
+    logging: *default-logging
+
+volumes:
+  bot_pgdata:
+  blog_pgdata:
+  blog_storage:

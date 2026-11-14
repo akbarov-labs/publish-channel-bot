@@ -5,3 +5,5 @@ vendor/
 storage/logs/*
 database/database.sqlite
 tests/
+bootstrap/cache/*.php
+storage/framework/*/*

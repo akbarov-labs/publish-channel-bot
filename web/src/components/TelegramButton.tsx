@@ -1,12 +1,15 @@
 import { Telegram } from "@/components/Icons";
+import { dict, type Locale } from "@/lib/i18n";
 
 /** The one primary action an author's space offers: follow the channel. */
 export default function TelegramButton({
   href,
+  locale,
   size = "md",
-  children = "Follow on Telegram",
+  children,
 }: {
   href: string;
+  locale: Locale;
   size?: "sm" | "md";
   children?: React.ReactNode;
 }) {
@@ -20,7 +23,7 @@ export default function TelegramButton({
       className={`inline-flex items-center rounded-full bg-accent font-medium text-on-accent transition-[filter,transform] duration-150 ease-out hover:brightness-110 active:scale-[0.98] ${sizing}`}
     >
       <Telegram className={size === "sm" ? "size-4" : "size-[18px]"} />
-      {children}
+      {children ?? dict(locale).followOnTelegram}
     </a>
   );
 }
