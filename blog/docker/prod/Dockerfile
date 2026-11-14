@@ -52,7 +52,14 @@ WORKDIR /var/www/html
 COPY --from=vendor /app /var/www/html
 
 # Without the package manifest Laravel would not register Filament at all.
-RUN php artisan package:discover --ansi
+# Filament's CSS, JS and fonts are published into public/ (git-ignored, so a
+# clean CI checkout has none); without them the admin renders as bare HTML.
+# The test fails the build instead of shipping an unstyled admin.
+RUN php artisan package:discover --ansi \
+    && php artisan filament:assets \
+    && test -f public/css/filament/filament/app.css \
+    && test -f public/js/filament/filament/app.js \
+    && test -f public/fonts/filament/filament/inter/index.css
 
 COPY docker/prod/nginx.conf /etc/nginx/sites-enabled/default.conf
 COPY docker/prod/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
