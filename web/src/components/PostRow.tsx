@@ -2,7 +2,8 @@ import Link from "next/link";
 import Avatar from "@/components/Avatar";
 import { Photos, Play } from "@/components/Icons";
 import type { PostSummary } from "@/lib/api";
-import { cleanExcerpt, coverOf, formatDate, guessLang, photoCount, typeLabel } from "@/lib/text";
+import { dict, formatDate, type Locale } from "@/lib/i18n";
+import { cleanExcerpt, coverOf, guessLang, photoCount, typeLabel } from "@/lib/text";
 
 /** In-site paths go through the router; other authors live on other hosts. */
 export function SmartLink({
@@ -28,9 +29,9 @@ export function SmartLink({
   );
 }
 
-export function PostMeta({ post, extra }: { post: PostSummary; extra?: string }) {
-  const label = typeLabel(post);
-  const parts = [formatDate(post.published_at), label, extra].filter(Boolean);
+export function PostMeta({ post, locale, extra }: { post: PostSummary; locale: Locale; extra?: string }) {
+  const label = typeLabel(post, dict(locale));
+  const parts = [formatDate(post.published_at, locale), label, extra].filter(Boolean);
 
   return (
     <p className="flex flex-wrap items-center gap-x-1.5 text-[0.8125rem] text-muted tabular-nums">
@@ -69,11 +70,13 @@ export function PostRow({
   href,
   showAuthor = false,
   authorHref,
+  locale,
 }: {
   post: PostSummary;
   href: string;
   showAuthor?: boolean;
   authorHref?: string;
+  locale: Locale;
 }) {
   const excerpt = cleanExcerpt(post);
   const cover = coverOf(post);
@@ -105,7 +108,7 @@ export function PostRow({
           </p>
         )}
         <div className="mt-3">
-          <PostMeta post={post} />
+          <PostMeta post={post} locale={locale} />
         </div>
       </div>
       {cover && (
@@ -120,7 +123,7 @@ export function PostRow({
 }
 
 /** The newest post on an author's front page, given room to breathe. */
-export function FeaturedPost({ post, href }: { post: PostSummary; href: string }) {
+export function FeaturedPost({ post, href, locale }: { post: PostSummary; href: string; locale: Locale }) {
   const excerpt = cleanExcerpt(post);
   const cover = coverOf(post);
   const lang = guessLang(`${post.title} ${excerpt ?? ""}`);
@@ -139,7 +142,7 @@ export function FeaturedPost({ post, href }: { post: PostSummary; href: string }
           {post.post_type === "gallery" && (
             <span className="absolute bottom-3 left-3 inline-flex items-center gap-1.5 rounded-full bg-black/65 px-2.5 py-1 text-xs font-medium text-white tabular-nums">
               <Photos className="size-4" />
-              {typeLabel(post)}
+              {typeLabel(post, dict(locale))}
             </span>
           )}
         </div>
@@ -158,7 +161,7 @@ export function FeaturedPost({ post, href }: { post: PostSummary; href: string }
         </p>
       )}
       <div className="mt-4">
-        <PostMeta post={post} />
+        <PostMeta post={post} locale={locale} />
       </div>
     </article>
   );

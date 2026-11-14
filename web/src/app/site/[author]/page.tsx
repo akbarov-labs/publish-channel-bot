@@ -3,6 +3,7 @@ import Avatar from "@/components/Avatar";
 import Pagination, { pageFrom } from "@/components/Pagination";
 import { FeaturedPost, PostRow } from "@/components/PostRow";
 import { getAuthor, getAuthorPosts } from "@/lib/api";
+import { dict, localeOf } from "@/lib/i18n";
 import { guessLang } from "@/lib/text";
 
 function channelHandle(url: string): string {
@@ -15,6 +16,8 @@ export default async function AuthorHome({ params, searchParams }: PageProps<"/s
   const page = pageFrom((await searchParams).page);
   const [author, posts] = await Promise.all([getAuthor(username), getAuthorPosts(username, page)]);
   if (!author || !posts) notFound();
+  const locale = localeOf(author.locale);
+  const t = dict(locale);
 
   const [first, ...rest] = posts.data;
   const featured = page === 1 ? first : undefined;
@@ -34,7 +37,7 @@ export default async function AuthorHome({ params, searchParams }: PageProps<"/s
             </p>
           )}
           <p className="mt-4 flex flex-wrap items-center justify-center gap-x-2 text-sm text-muted tabular-nums">
-            <span>{author.posts_count === 1 ? "1 post" : `${author.posts_count ?? posts.total} posts`}</span>
+            <span>{t.posts(author.posts_count ?? posts.total)}</span>
             {author.telegram_url && (
               <>
                 <span aria-hidden="true">·</span>
@@ -50,25 +53,25 @@ export default async function AuthorHome({ params, searchParams }: PageProps<"/s
       <div className="mx-auto max-w-[720px] px-4">
         {posts.data.length === 0 ? (
           <div className="border-t border-line py-16 text-center">
-            <h2 className="title text-xl">No posts yet</h2>
+            <h2 className="title text-xl">{t.noPostsTitle}</h2>
             <p className="mx-auto mt-2 max-w-[40ch] text-muted">
-              When {author.name} posts in their channel, it appears here.
+              {t.noPostsText(author.name)}
             </p>
           </div>
         ) : (
           <>
             {featured && (
               <div className="border-t border-line pt-8">
-                <FeaturedPost post={featured} href={`/posts/${featured.slug}`} />
+                <FeaturedPost post={featured} href={`/posts/${featured.slug}`} locale={locale} />
               </div>
             )}
-            {page > 1 && <h1 className="title pt-10 text-xl">Older posts, page {page}</h1>}
+            {page > 1 && <h1 className="title pt-10 text-xl">{t.olderPostsPage(page)}</h1>}
             <div className="divide-y divide-line border-t border-line">
               {rows.map((post) => (
-                <PostRow key={post.id} post={post} href={`/posts/${post.slug}`} />
+                <PostRow key={post.id} post={post} href={`/posts/${post.slug}`} locale={locale} />
               ))}
             </div>
-            <Pagination page={posts.current_page} lastPage={posts.last_page} />
+            <Pagination page={posts.current_page} lastPage={posts.last_page} locale={locale} />
           </>
         )}
       </div>

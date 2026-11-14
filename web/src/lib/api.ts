@@ -14,6 +14,8 @@ export type Author = {
   avatar_url: string | null;
   telegram_url: string | null;
   site_url: string;
+  /** The language of the author's interface; posts keep their own. */
+  locale?: string;
   posts_count?: number;
   latest_post_at?: string | null;
 };

@@ -15,7 +15,7 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
-#[Fillable(['name', 'username', 'email', 'password', 'bio', 'avatar', 'telegram_channel', 'webhook_url', 'webhook_secret'])]
+#[Fillable(['name', 'username', 'email', 'password', 'bio', 'avatar', 'telegram_channel', 'webhook_url', 'webhook_secret', 'locale'])]
 #[Hidden(['password', 'remember_token', 'bot_token_hash', 'webhook_secret'])]
 class User extends Authenticatable implements FilamentUser
 {
@@ -29,6 +29,18 @@ class User extends Authenticatable implements FilamentUser
     public const RESERVED_USERNAMES = [
         'www', 'api', 'admin', 'app', 'blog', 'mail', 'static', 'assets',
         'cdn', 'media', 'storage', 'help', 'support', 'status', 'sites',
+    ];
+
+    /** Interface languages of the reader site, as shown in the admin. */
+    public const LOCALES = [
+        'uz' => "O'zbekcha",
+        'ru' => 'Русский',
+        'en' => 'English',
+    ];
+
+    /** The database default too, so a model that was never reloaded has it. */
+    protected $attributes = [
+        'locale' => 'uz',
     ];
 
     /** Lowercase letters, digits and inner hyphens: a valid DNS label. */

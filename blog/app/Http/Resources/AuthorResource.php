@@ -25,6 +25,8 @@ class AuthorResource extends JsonResource
             'avatar_url' => $this->avatarUrl(),
             'telegram_url' => $this->telegramUrl(),
             'site_url' => $this->siteUrl(),
+            // The language of the space's interface, not of its posts.
+            'locale' => $this->locale ?? 'uz',
             'posts_count' => $this->whenHas('posts_count'),
             'latest_post_at' => $this->whenHas('latest_post_at', fn () => $this->latest_post_at
                 ? date(DATE_ATOM, strtotime($this->latest_post_at))

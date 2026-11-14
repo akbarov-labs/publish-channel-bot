@@ -2,9 +2,11 @@
 
 namespace Tests\Feature;
 
+use App\Filament\Pages\EditProfile;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
+use Livewire\Livewire;
 use Tests\TestCase;
 
 class AdminPanelTest extends TestCase
@@ -58,5 +60,32 @@ class AdminPanelTest extends TestCase
             ->get('/admin/profile')
             ->assertOk()
             ->assertSee('Generate bot token');
+    }
+
+    public function test_an_author_picks_the_language_of_their_site(): void
+    {
+        $author = User::factory()->create();
+        $this->actingAs($author);
+
+        Livewire::test(EditProfile::class)
+            ->assertSchemaStateSet(['locale' => 'uz'])
+            ->fillForm(['locale' => 'ru'])
+            ->call('save')
+            ->assertHasNoFormErrors();
+
+        $this->assertSame('ru', $author->fresh()->locale);
+    }
+
+    public function test_only_the_offered_languages_are_accepted(): void
+    {
+        $author = User::factory()->create();
+        $this->actingAs($author);
+
+        Livewire::test(EditProfile::class)
+            ->fillForm(['locale' => 'de'])
+            ->call('save')
+            ->assertHasFormErrors(['locale']);
+
+        $this->assertSame('uz', $author->fresh()->locale);
     }
 }
