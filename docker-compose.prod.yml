@@ -143,6 +143,8 @@ services:
       # Interface language of the root directory; each author picks their
       # own on their admin Profile.
       DEFAULT_LOCALE: ${DEFAULT_LOCALE:-uz}
+      # The platform's name on the root directory and in footers.
+      SITE_NAME: ${SITE_NAME:-Channels}
     networks:
       default: {}
       edge: {}

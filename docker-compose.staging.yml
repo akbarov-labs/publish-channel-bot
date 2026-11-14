@@ -135,6 +135,8 @@ services:
       BLOG_API_URL: http://pcb-blog/api
       ROOT_URL: https://${DOMAIN}
       DEFAULT_LOCALE: ${DEFAULT_LOCALE:-uz}
+      # The platform's name on the root directory and in footers.
+      SITE_NAME: ${SITE_NAME:-Channels}
     networks:
       default: {}
       edge: {}
