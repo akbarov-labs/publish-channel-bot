@@ -64,35 +64,37 @@ records to `169.58.243.86`:
 |---|---|
 | `DOMAIN` | the directory |
 | `*.DOMAIN` | every author, plus `admin.` and `bot.` |
-| `*.publish-channel-bot.staging` in `sarvarlogs.uz` | staging's authors, `admin.`, `bot.` (the existing `*.staging` record covers only one level, which is staging's own root) |
+| `publish-channel-bot.staging` in `sarvarlogs.uz` | staging's directory (there is no `*.staging` wildcard; other staging sites have records of their own) |
+| `*.publish-channel-bot.staging` in `sarvarlogs.uz` | staging's authors, `admin.`, `bot.` |
 
 ### 2. The edge Caddy's ask URL (once for the server)
 
 On the server, in the edge proxy's folder (`~/edge`, see
-`infra/edge-caddy/README.md` in online-shop-telegram-bot), add to the global
-block of `Caddyfile`:
+`infra/edge-caddy/README.md` in online-shop-telegram-bot), add this block
+just before the closing `}` of the global block in `Caddyfile`. Add only
+this block: leave `email`, `servers`, the Cloudflare `trusted_proxies` and
+`client_ip_headers` lines as they are.
 
 ```caddyfile
-{
-	email {$ACME_EMAIL}
-	servers {
-		trusted_proxies static private_ranges
-	}
-	# Author subdomains of publish-channel-bot (its DEPLOY.md). The only app
-	# using on-demand TLS; another one would need its own check behind the
-	# same URL.
-	on_demand_tls {
-		ask http://pcb-tls-ask/api/tls/allowed
-	}
-}
+    # Author subdomains of publish-channel-bot (see its DEPLOY.md). Caddy asks
+    # the blog before issuing a certificate, so random subdomains are refused.
+    on_demand_tls {
+        ask http://pcb-tls-ask/api/tls/allowed
+    }
 ```
 
-Then restart it and read its log. Every site on the box goes through it, so
-check this one carefully:
+Validate the edited copy first, then swap it in and recreate the proxy
+(`sarvar` is not in the `docker` group, so these need `sudo`). Every site on
+the box goes through it, so read the log afterwards:
 
 ```bash
-cd ~/edge && docker compose up -d --force-recreate && docker logs edge-caddy-1 --tail=50
+sudo docker run --rm -e ACME_EMAIL=test@example.com -v "$PWD/Caddyfile.new:/etc/caddy/Caddyfile:ro" \
+  --entrypoint caddy lucaslorentz/caddy-docker-proxy:2.9-alpine validate --config /etc/caddy/Caddyfile --adapter caddyfile
+cp Caddyfile Caddyfile.bak-before-pcb && cp Caddyfile.new Caddyfile
+sudo docker compose up -d --force-recreate && sudo docker logs edge-caddy-1 --tail=50
 ```
+
+Rollback: `cp Caddyfile.bak-before-pcb Caddyfile && sudo docker compose up -d --force-recreate`.
 
 Until this app's blog runs, the ask URL simply doesn't answer, which only
 means no author certificates yet; every other site is unaffected.
