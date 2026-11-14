@@ -35,4 +35,12 @@ return [
         ],
     ],
 
+    // Caddy's on-demand TLS check (App\Http\Controllers\Api\TlsAskController).
+    // The other stack's ask URL, production's for staging and the reverse, so
+    // a question meant for it can be passed on. Empty: answer for our own
+    // domain only.
+    'tls_ask' => [
+        'peer_url' => env('TLS_ASK_PEER_URL', ''),
+    ],
+
 ];

@@ -13,6 +13,12 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // In production only the edge Caddy can reach this container (it has
+        // no published port), and it terminates TLS. Trusting its forwarded
+        // headers is what makes generated URLs - media, the admin's own
+        // links - https:// rather than mixed content.
+        $middleware->trustProxies(at: '*');
+
         $middleware->alias([
             'bot.auth' => App\Http\Middleware\AuthenticateBot::class,
         ]);

@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+# Run by the server's deploy-app before `docker compose up`, as root, in
+# /opt/apps/publish-channel-bot (or -staging), with COMPOSE_FILE, IMAGE and
+# IMAGE_TAG set. Installed there by `sudo add-app`; a change here reaches the
+# server only when copied by hand (DEPLOY.md, "Changing server files").
+#
+#   1. refuse to deploy without the values the stack cannot run without;
+#   2. dump both databases first (production only: staging has no backup
+#      service), so a bad migration can be undone from that dump.
+set -euo pipefail
+
+c() { docker compose -f "$COMPOSE_FILE" "$@"; }
+
+missing=""
+for key in DOMAIN APP_KEY BOT_TOKEN BOT_SECRET_KEY TELEGRAM_WEBHOOK_SECRET BOT_DB_PASSWORD BLOG_DB_PASSWORD; do
+  grep -qE "^${key}=.+" .env || missing="$missing $key"
+done
+if [[ -n $missing ]]; then
+  echo "FATAL: .env is missing values for:$missing (see .env.production.example)"
+  exit 1
+fi
+
+if grep -qE '^DOMAIN=(example\.uz|example\.com)\s*$' .env; then
+  echo "FATAL: DOMAIN in .env is still the placeholder."
+  exit 1
+fi
+
+# Quotes would reach the containers literally (env_file and compose's own
+# .env reading do not strip them the way a shell does).
+if grep -qE "^APP_KEY=[\"']" .env; then
+  echo "FATAL: APP_KEY in .env is quoted; write it without quotes."
+  exit 1
+fi
+
+if c config --services | grep -qx backup && c ps --status running -q backup | grep -q .; then
+  echo "--- pre-deploy database backup"
+  c exec -T backup /usr/local/bin/backup.sh \
+    || echo "WARNING: pre-deploy backup FAILED - deploying anyway. Check: docker compose -f $COMPOSE_FILE logs backup"
+fi

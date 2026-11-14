@@ -1,0 +1,224 @@
+# Production stack for the Contabo server. Lives at
+# /opt/apps/publish-channel-bot/docker-compose.prod.yml, root-owned, next to
+# the server's .env (see DEPLOY.md). Nothing is built here: CI builds the
+# three images and the server's deploy-app pulls them by commit SHA.
+#
+# Addresses, all derived from DOMAIN in .env:
+#   DOMAIN             reader site: directory of authors      (web)
+#   <author>.DOMAIN    an author's space, certificate on demand (web)
+#   admin.DOMAIN       admin panel, blog API, media            (blog)
+#   bot.DOMAIN         Telegram and blog webhooks              (bot)
+#
+# Routing is the server's edge Caddy (caddy-docker-proxy), which reads the
+# `caddy` labels below off the containers on the shared `edge` network. It
+# also needs ONE global setting for author certificates; see DEPLOY.md,
+# "One-time server setup".
+#
+# Every other name this file uses on the shared `edge` network starts with
+# pcb- and says which stack it is: staging runs beside this on the same proxy,
+# and two stacks answering to one name would mix their traffic.
+
+x-logging: &default-logging
+  driver: json-file
+  options: { max-size: "10m", max-file: "3" }
+
+networks:
+  default: {}
+  edge:
+    external: true
+
+services:
+  bot-db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: bot
+      POSTGRES_PASSWORD: ${BOT_DB_PASSWORD:?set BOT_DB_PASSWORD in .env}
+      POSTGRES_DB: bot
+    volumes:
+      - bot_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U bot -d bot"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    mem_limit: 256m
+    logging: *default-logging
+
+  blog-db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: blog
+      POSTGRES_PASSWORD: ${BLOG_DB_PASSWORD:?set BLOG_DB_PASSWORD in .env}
+      POSTGRES_DB: blog
+    volumes:
+      - blog_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U blog -d blog"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    mem_limit: 256m
+    logging: *default-logging
+
+  bot:
+    image: ${IMAGE:-ghcr.io/akbarov-labs/publish-channel-bot}/bot:${IMAGE_TAG:-latest}
+    restart: unless-stopped
+    environment:
+      BOT_TOKEN: ${BOT_TOKEN:?set BOT_TOKEN in .env}
+      SECRET_KEY: ${BOT_SECRET_KEY:?set BOT_SECRET_KEY in .env}
+      DATABASE_URL: postgresql+asyncpg://bot:${BOT_DB_PASSWORD}@bot-db:5432/bot
+      PUBLIC_BASE_URL: https://bot.${DOMAIN:?set DOMAIN in .env}
+      TELEGRAM_MODE: webhook
+      TELEGRAM_WEBHOOK_SECRET: ${TELEGRAM_WEBHOOK_SECRET:?set TELEGRAM_WEBHOOK_SECRET in .env}
+    networks:
+      default: {}
+      edge: {}
+    labels:
+      caddy: bot.${DOMAIN}
+      caddy.reverse_proxy: "{{upstreams 8000}}"
+    depends_on:
+      bot-db: { condition: service_healthy }
+    mem_limit: 256m
+    logging: *default-logging
+
+  blog:
+    image: ${IMAGE:-ghcr.io/akbarov-labs/publish-channel-bot}/blog:${IMAGE_TAG:-latest}
+    restart: unless-stopped
+    environment:
+      APP_NAME: ${APP_NAME:-Channels}
+      APP_ENV: production
+      APP_KEY: ${APP_KEY:?set APP_KEY in .env}
+      APP_DEBUG: "false"
+      APP_URL: https://admin.${DOMAIN}
+      FRONTEND_URL: https://${DOMAIN}
+      LOG_CHANNEL: stderr
+      LOG_LEVEL: ${LOG_LEVEL:-warning}
+      DB_CONNECTION: pgsql
+      DB_HOST: blog-db
+      DB_PORT: 5432
+      DB_DATABASE: blog
+      DB_USERNAME: blog
+      DB_PASSWORD: ${BLOG_DB_PASSWORD}
+      SESSION_DRIVER: database
+      SESSION_SECURE_COOKIE: "true"
+      SESSION_SAME_SITE: lax
+      CACHE_STORE: database
+      QUEUE_CONNECTION: database
+      FILESYSTEM_DISK: local
+      MAIL_MAILER: log
+      # Production and staging blogs both answer Caddy's certificate question
+      # (pcb-tls-ask below); each passes the other's hosts to the other.
+      TLS_ASK_PEER_URL: http://pcb-tls-ask-staging/api/tls/allowed
+    networks:
+      default:
+        # How web reaches this blog. Exists only on this stack's own network.
+        aliases: [pcb-blog]
+      edge:
+        # pcb-tls-ask: what the edge Caddy asks before an author's
+        # certificate (DEPLOY.md). The second name is how staging's blog
+        # reaches this one.
+        aliases: [pcb-tls-ask, pcb-tls-ask-production]
+    labels:
+      caddy: admin.${DOMAIN}
+      # The certificate check is for Caddy over the Docker network only.
+      caddy.respond: /api/tls/* 404
+      caddy.reverse_proxy: "{{upstreams 80}}"
+    volumes:
+      # Uploaded media (storage/app/public) and logs. Irreplaceable: never
+      # prune or recreate it. Off-site copies: DEPLOY.md, "Backups".
+      - blog_storage:/var/www/html/storage
+    depends_on:
+      blog-db: { condition: service_healthy }
+    mem_limit: 512m
+    logging: *default-logging
+
+  web:
+    image: ${IMAGE:-ghcr.io/akbarov-labs/publish-channel-bot}/web:${IMAGE_TAG:-latest}
+    restart: unless-stopped
+    environment:
+      BLOG_API_URL: http://pcb-blog/api
+      ROOT_URL: https://${DOMAIN}
+      # Interface language of the root directory; each author picks their
+      # own on their admin Profile.
+      DEFAULT_LOCALE: ${DEFAULT_LOCALE:-uz}
+    networks:
+      default: {}
+      edge: {}
+    labels:
+      caddy_0: ${DOMAIN}
+      caddy_0.reverse_proxy: "{{upstreams 3000}}"
+      # Every author's space. Certificates are fetched the first time a host
+      # is opened, after the edge Caddy asks pcb-tls-ask whether that author
+      # exists. admin. and bot. are more specific, so they keep their own
+      # blocks above.
+      caddy_1: "*.${DOMAIN}"
+      caddy_1.tls.on_demand: ""
+      caddy_1.reverse_proxy: "{{upstreams 3000}}"
+    depends_on:
+      - blog
+    mem_limit: 384m
+    logging: *default-logging
+
+  # Nightly pg_dump of both databases at 03:40 UTC into the db_backups volume,
+  # plus one on every start, so a broken backup shows up at deploy time.
+  # The server's offsite-backup job copies the volume (and the media in
+  # blog_storage) off the box; restore steps are in DEPLOY.md.
+  #   - The script is inline: deploys copy only this file to the server.
+  #   - `$$` reaches the shell as `$`; compose would expand a single one.
+  backup:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      BOT_DB_PASSWORD: ${BOT_DB_PASSWORD}
+      BLOG_DB_PASSWORD: ${BLOG_DB_PASSWORD}
+      BACKUP_RETENTION_DAYS: ${BACKUP_RETENTION_DAYS:-14}
+    volumes:
+      - db_backups:/backups
+    entrypoint: ["sh", "-c"]
+    command:
+      - |
+        set -e
+        cat > /usr/local/bin/backup.sh <<'SCRIPT'
+        #!/bin/sh
+        set -eu
+        stamp=$$(date -u +%Y-%m-%dT%H-%M-%SZ)
+        keep=$${BACKUP_RETENTION_DAYS:-14}
+        status=0
+        for db in blog bot; do
+          case $$db in
+            blog) pass=$$BLOG_DB_PASSWORD ;;
+            bot) pass=$$BOT_DB_PASSWORD ;;
+          esac
+          target=/backups/$$db-$$stamp.dump
+          # Custom format: compressed, and pg_restore can restore one table.
+          if PGPASSWORD=$$pass pg_dump -h $$db-db -U $$db -d $$db -Fc -f "$$target.partial" \
+             && pg_restore --list "$$target.partial" >/dev/null; then
+            mv "$$target.partial" "$$target"
+            echo "[backup] $$(date -u +%FT%TZ) ok: $$target ($$(du -h "$$target" | cut -f1))"
+          else
+            rm -f "$$target.partial"
+            echo "[backup] $$(date -u +%FT%TZ) FAILED: $$db" >&2
+            status=1
+          fi
+        done
+        find /backups -name '*.dump' -mtime "+$$keep" -exec rm -f {} +
+        find /backups -name '*.partial' -mmin +60 -exec rm -f {} +
+        exit $$status
+        SCRIPT
+        chmod +x /usr/local/bin/backup.sh
+        echo "40 3 * * * BOT_DB_PASSWORD='$$BOT_DB_PASSWORD' BLOG_DB_PASSWORD='$$BLOG_DB_PASSWORD' BACKUP_RETENTION_DAYS=$$BACKUP_RETENTION_DAYS /usr/local/bin/backup.sh >/proc/1/fd/1 2>&1" > /etc/crontabs/root
+        /usr/local/bin/backup.sh || echo '[backup] startup backup failed - see above'
+        exec crond -f -l 8
+    depends_on:
+      bot-db: { condition: service_healthy }
+      blog-db: { condition: service_healthy }
+    mem_limit: 128m
+    logging: *default-logging
+
+volumes:
+  bot_pgdata:
+  blog_pgdata:
+  blog_storage:
+  db_backups:

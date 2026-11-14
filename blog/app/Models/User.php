@@ -29,6 +29,8 @@ class User extends Authenticatable implements FilamentUser
     public const RESERVED_USERNAMES = [
         'www', 'api', 'admin', 'app', 'blog', 'mail', 'static', 'assets',
         'cdn', 'media', 'storage', 'help', 'support', 'status', 'sites',
+        // The bot's webhooks are served at bot.<domain>.
+        'bot',
     ];
 
     /** Lowercase letters, digits and inner hyphens: a valid DNS label. */
