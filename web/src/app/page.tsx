@@ -5,7 +5,7 @@ import SiteBar from "@/components/SiteBar";
 import { getAuthors, getLatestPosts, type Author } from "@/lib/api";
 import { authorUrl } from "@/lib/hosts";
 import { SITE_NAME } from "@/lib/site";
-import { formatDate } from "@/lib/text";
+import { defaultLocale, dict, formatDate, type Dictionary, type Locale } from "@/lib/i18n";
 
 // Rendered per request so the image can be built without the blog API being
 // reachable. The 60s fetch cache in lib/api still absorbs the traffic.
@@ -15,7 +15,7 @@ export const metadata = {
   title: { absolute: SITE_NAME },
 };
 
-function AuthorListItem({ author }: { author: Author }) {
+function AuthorListItem({ author, t, locale }: { author: Author; t: Dictionary; locale: Locale }) {
   return (
     <li>
       <a href={authorUrl(author.username)} className="group flex gap-3 py-3">
@@ -26,8 +26,8 @@ function AuthorListItem({ author }: { author: Author }) {
           </span>
           {author.bio && <span className="mt-0.5 line-clamp-2 block text-[0.8125rem] leading-snug text-muted">{author.bio}</span>}
           <span className="mt-1 block text-xs text-muted tabular-nums">
-            {author.posts_count === 1 ? "1 post" : `${author.posts_count ?? 0} posts`}
-            {author.latest_post_at && <> · last {formatDate(author.latest_post_at)}</>}
+            {t.posts(author.posts_count ?? 0)}
+            {author.latest_post_at && <> · {t.lastPosted(formatDate(author.latest_post_at, locale))}</>}
           </span>
         </span>
       </a>
@@ -38,6 +38,8 @@ function AuthorListItem({ author }: { author: Author }) {
 export default async function Home({ searchParams }: PageProps<"/">) {
   const page = pageFrom((await searchParams).page);
   const [authors, posts] = await Promise.all([getAuthors(), getLatestPosts(page)]);
+  const locale = defaultLocale();
+  const t = dict(locale);
 
   return (
     <>
@@ -47,20 +49,19 @@ export default async function Home({ searchParams }: PageProps<"/">) {
         {page === 1 && (
           <section className="border-b border-line py-12 sm:py-16">
             <h1 className="title max-w-[18ch] text-[2.25rem] leading-[1.08] sm:text-[3.5rem]">
-              Writing from Telegram channels
+              {t.heroTitle}
             </h1>
             <p className="mt-5 max-w-[56ch] font-serif text-[1.0625rem] leading-relaxed text-ink-soft sm:text-xl">
-              Every author here writes in their own channel. Posts, albums and long reads arrive on their page on their
-              own, with the dates they were first published.
+              {t.heroText}
             </p>
           </section>
         )}
 
         {authors.length === 0 && posts.data.length === 0 ? (
           <section className="py-20 text-center">
-            <h2 className="title text-2xl">Nothing published yet</h2>
+            <h2 className="title text-2xl">{t.emptyTitle}</h2>
             <p className="mx-auto mt-3 max-w-[46ch] text-muted">
-              Connect a Telegram channel to the bot and its posts appear here, each author on their own page.
+              {t.emptyText}
             </p>
           </section>
         ) : (
@@ -69,7 +70,7 @@ export default async function Home({ searchParams }: PageProps<"/">) {
             {authors.length > 0 && (
               <section aria-labelledby="authors-strip" className="border-b border-line py-6 lg:hidden">
                 <h2 id="authors-strip" className="text-[0.9375rem] font-semibold">
-                  Authors
+                  {t.authors}
                 </h2>
                 <ul className="no-scrollbar -mx-4 mt-4 flex gap-5 overflow-x-auto px-4">
                   {authors.map((author) => (
@@ -86,7 +87,7 @@ export default async function Home({ searchParams }: PageProps<"/">) {
 
             <section aria-labelledby="latest" className="pt-8">
               <h2 id="latest" className="text-[0.9375rem] font-semibold">
-                {page === 1 ? "Latest posts" : `Latest posts, page ${page}`}
+                {t.latestPosts(page)}
               </h2>
               <div className="divide-y divide-line">
                 {posts.data.map((post) => (
@@ -96,21 +97,22 @@ export default async function Home({ searchParams }: PageProps<"/">) {
                     href={post.author ? authorUrl(post.author.username, `/posts/${post.slug}`) : post.url}
                     authorHref={post.author ? authorUrl(post.author.username) : undefined}
                     showAuthor
+                    locale={locale}
                   />
                 ))}
               </div>
-              <Pagination page={posts.current_page} lastPage={posts.last_page} />
+              <Pagination page={posts.current_page} lastPage={posts.last_page} locale={locale} />
             </section>
 
             {authors.length > 0 && (
               <aside aria-labelledby="authors" className="hidden pt-8 lg:block">
                 <div className="sticky top-8">
                   <h2 id="authors" className="text-[0.9375rem] font-semibold">
-                    Authors
+                    {t.authors}
                   </h2>
                   <ul className="mt-2 divide-y divide-line">
                     {authors.map((author) => (
-                      <AuthorListItem key={author.username} author={author} />
+                      <AuthorListItem key={author.username} author={author} t={t} locale={locale} />
                     ))}
                   </ul>
                 </div>
@@ -122,7 +124,7 @@ export default async function Home({ searchParams }: PageProps<"/">) {
 
       <footer className="mt-16 border-t border-line">
         <div className="mx-auto max-w-[1120px] px-4 py-8 text-sm text-muted sm:px-6">
-          {SITE_NAME} · Every page here is written in a Telegram channel.
+          {SITE_NAME} · {t.directoryFooter}
         </div>
       </footer>
     </>

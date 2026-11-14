@@ -1,0 +1,14 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "design-system-font",
+        "value": "sfmono-regular",
+        "createdAt": "2026-11-14T01:59:43.869Z",
+        "reason": "Documented in web/DESIGN.md:194 (Label/Mono Font: ui-monospace, SFMono-Regular, Menlo for code); checker missed that line"
+      }
+    ]
+  }
+}

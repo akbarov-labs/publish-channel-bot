@@ -3,13 +3,15 @@
 import { useEffect, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight } from "@/components/Icons";
 import type { PostMedium } from "@/lib/api";
+import { dict, type Locale } from "@/lib/i18n";
 
 /**
  * A Telegram album in its original order. The track is a native scroll-snap
  * strip, so phones swipe it with no script at all; the script only keeps the
  * counter, arrows and thumbnails in step with wherever the reader scrolled.
  */
-export default function Gallery({ items, label }: { items: PostMedium[]; label: string }) {
+export default function Gallery({ items, label, locale }: { items: PostMedium[]; label: string; locale: Locale }) {
+  const t = dict(locale);
   const trackRef = useRef<HTMLDivElement>(null);
   const thumbsRef = useRef<HTMLDivElement>(null);
   const [index, setIndex] = useState(0);
@@ -93,7 +95,7 @@ export default function Gallery({ items, label }: { items: PostMedium[]; label: 
               data-index={position}
               role="group"
               aria-roledescription="slide"
-              aria-label={`${position + 1} of ${count}`}
+              aria-label={t.slideOf(position + 1, count)}
               style={{ aspectRatio: ratio }}
               className="flex max-h-[78vh] w-full shrink-0 snap-center items-center justify-center"
             >
@@ -104,7 +106,7 @@ export default function Gallery({ items, label }: { items: PostMedium[]; label: 
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
                   src={item.url}
-                  alt={`Photo ${position + 1} of ${count}`}
+                  alt={t.photoOf(position + 1, count)}
                   loading={position < 2 ? "eager" : "lazy"}
                   decoding="async"
                   draggable={false}
@@ -118,10 +120,10 @@ export default function Gallery({ items, label }: { items: PostMedium[]; label: 
 
         {count > 1 && (
           <>
-            <button type="button" onClick={() => go(index - 1)} disabled={index === 0} aria-label="Previous photo" className={`${arrow} left-3`}>
+            <button type="button" onClick={() => go(index - 1)} disabled={index === 0} aria-label={t.previousPhoto} className={`${arrow} left-3`}>
               <ChevronLeft />
             </button>
-            <button type="button" onClick={() => go(index + 1)} disabled={index === count - 1} aria-label="Next photo" className={`${arrow} right-3`}>
+            <button type="button" onClick={() => go(index + 1)} disabled={index === count - 1} aria-label={t.nextPhoto} className={`${arrow} right-3`}>
               <ChevronRight />
             </button>
             <span className="pointer-events-none absolute right-3 top-3 rounded-full bg-black/65 px-2.5 py-1 text-xs font-medium text-white tabular-nums">
@@ -138,7 +140,7 @@ export default function Gallery({ items, label }: { items: PostMedium[]; label: 
               key={item.id ?? position}
               type="button"
               onClick={() => go(position)}
-              aria-label={`Show photo ${position + 1}`}
+              aria-label={t.showPhoto(position + 1)}
               aria-current={position === index ? "true" : undefined}
               className={`relative size-14 shrink-0 overflow-hidden rounded-[4px] bg-surface transition-[filter] duration-150 sm:size-16 ${
                 position === index
@@ -147,7 +149,7 @@ export default function Gallery({ items, label }: { items: PostMedium[]; label: 
               }`}
             >
               {item.type === "video" ? (
-                <span className="flex h-full w-full items-center justify-center text-xs text-muted">Video</span>
+                <span className="flex h-full w-full items-center justify-center text-xs text-muted">{t.video}</span>
               ) : (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={item.url} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" />

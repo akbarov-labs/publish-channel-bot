@@ -147,6 +147,17 @@ class PublicApiTest extends TestCase
             ->assertJsonPath('name', $aziza->name)
             ->assertJsonPath('bio', 'Notes from Tashkent')
             ->assertJsonPath('posts_count', 1)
+            ->assertJsonPath('locale', 'uz')
             ->assertJsonMissingPath('email');
+    }
+
+    public function test_an_author_carries_the_language_of_their_space(): void
+    {
+        $dmitry = User::factory()->create(['username' => 'dmitry', 'locale' => 'ru']);
+        $this->publish($dmitry, 'Заметка');
+
+        $this->getJson('/api/public/authors/dmitry')->assertOk()->assertJsonPath('locale', 'ru');
+        $this->getJson('/api/public/authors')->assertOk()->assertJsonPath('data.0.locale', 'ru');
+        $this->getJson('/api/public/posts')->assertOk()->assertJsonPath('data.0.author.locale', 'ru');
     }
 }

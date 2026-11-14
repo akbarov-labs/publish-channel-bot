@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import AuthorBar from "@/components/AuthorBar";
 import { getAuthor } from "@/lib/api";
 import { authorUrl, rootUrl } from "@/lib/hosts";
+import { dict, localeOf } from "@/lib/i18n";
 import { SITE_NAME } from "@/lib/site";
 
 // Reached through the proxy: <username>.<root>/... is rewritten to /site/<username>/...
@@ -22,6 +23,7 @@ export async function generateMetadata({ params }: LayoutProps<"/site/[author]">
 export default async function AuthorLayout({ children, params }: LayoutProps<"/site/[author]">) {
   const author = await getAuthor((await params).author);
   if (!author) notFound();
+  const t = dict(localeOf(author.locale));
 
   return (
     <>
@@ -35,7 +37,7 @@ export default async function AuthorLayout({ children, params }: LayoutProps<"/s
             © {new Date().getFullYear()} {author.name}
           </span>
           <a href={rootUrl().origin} className="hover:text-ink hover:underline hover:underline-offset-4">
-            Published from Telegram on {SITE_NAME}
+            {t.publishedOn(SITE_NAME)}
           </a>
         </div>
       </footer>
