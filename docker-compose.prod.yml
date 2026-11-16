@@ -77,7 +77,9 @@ services:
       edge: {}
     labels:
       caddy: bot.${DOMAIN}
-      caddy.reverse_proxy: "{{upstreams 8000}}"
+      # By container name, not {{upstreams 8000}}: that renders as a bare
+      # :8000 while the container restarts (kitoblarim.uz 502s, 2026-11-16).
+      caddy.reverse_proxy: "publish-channel-bot-bot-1:8000"
     depends_on:
       bot-db: { condition: service_healthy }
     mem_limit: 256m
@@ -124,7 +126,9 @@ services:
       caddy: admin.${DOMAIN}
       # The certificate check is for Caddy over the Docker network only.
       caddy.respond: /api/tls/* 404
-      caddy.reverse_proxy: "{{upstreams 80}}"
+      # By container name, not {{upstreams 80}}: that renders as a bare
+      # :80 while the container restarts (kitoblarim.uz 502s, 2026-11-16).
+      caddy.reverse_proxy: "publish-channel-bot-blog-1:80"
     volumes:
       # Uploaded media (storage/app/public) and logs. Irreplaceable: never
       # prune or recreate it. Off-site copies: DEPLOY.md, "Backups".
@@ -150,14 +154,18 @@ services:
       edge: {}
     labels:
       caddy_0: ${DOMAIN}
-      caddy_0.reverse_proxy: "{{upstreams 3000}}"
+      # By container name, not {{upstreams 3000}}: that renders as a bare
+      # :3000 while the container restarts (kitoblarim.uz 502s, 2026-11-16).
+      caddy_0.reverse_proxy: "publish-channel-bot-web-1:3000"
       # Every author's space. Certificates are fetched the first time a host
       # is opened, after the edge Caddy asks pcb-tls-ask whether that author
       # exists. admin. and bot. are more specific, so they keep their own
       # blocks above.
       caddy_1: "*.${DOMAIN}"
       caddy_1.tls.on_demand: ""
-      caddy_1.reverse_proxy: "{{upstreams 3000}}"
+      # By container name, not {{upstreams 3000}}: that renders as a bare
+      # :3000 while the container restarts (kitoblarim.uz 502s, 2026-11-16).
+      caddy_1.reverse_proxy: "publish-channel-bot-web-1:3000"
     depends_on:
       - blog
     mem_limit: 384m
