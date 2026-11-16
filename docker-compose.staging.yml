@@ -79,7 +79,9 @@ services:
     labels:
       caddy: bot.${DOMAIN}
       caddy.header: X-Robots-Tag "noindex, nofollow"
-      caddy.reverse_proxy: "{{upstreams 8000}}"
+      # By container name, not {{upstreams 8000}}: that renders as a bare
+      # :8000 while the container restarts (kitoblarim.uz 502s, 2026-11-16).
+      caddy.reverse_proxy: "publish-channel-bot-staging-bot-1:8000"
     depends_on:
       bot-db: { condition: service_healthy }
     mem_limit: 256m
@@ -120,7 +122,9 @@ services:
       caddy: admin.${DOMAIN}
       caddy.header: X-Robots-Tag "noindex, nofollow"
       caddy.respond: /api/tls/* 404
-      caddy.reverse_proxy: "{{upstreams 80}}"
+      # By container name, not {{upstreams 80}}: that renders as a bare
+      # :80 while the container restarts (kitoblarim.uz 502s, 2026-11-16).
+      caddy.reverse_proxy: "publish-channel-bot-staging-blog-1:80"
     volumes:
       - blog_storage:/var/www/html/storage
     depends_on:
@@ -145,12 +149,16 @@ services:
       # Username "staging"; the password is whatever add-app hashed.
       caddy_0.basic_auth.staging: STAGING_AUTH_HASH
       caddy_0.header: X-Robots-Tag "noindex, nofollow"
-      caddy_0.reverse_proxy: "{{upstreams 3000}}"
+      # By container name, not {{upstreams 3000}}: that renders as a bare
+      # :3000 while the container restarts (kitoblarim.uz 502s, 2026-11-16).
+      caddy_0.reverse_proxy: "publish-channel-bot-staging-web-1:3000"
       caddy_1: "*.${DOMAIN}"
       caddy_1.tls.on_demand: ""
       caddy_1.basic_auth.staging: STAGING_AUTH_HASH
       caddy_1.header: X-Robots-Tag "noindex, nofollow"
-      caddy_1.reverse_proxy: "{{upstreams 3000}}"
+      # By container name, not {{upstreams 3000}}: that renders as a bare
+      # :3000 while the container restarts (kitoblarim.uz 502s, 2026-11-16).
+      caddy_1.reverse_proxy: "publish-channel-bot-staging-web-1:3000"
     depends_on:
       - blog
     mem_limit: 384m
