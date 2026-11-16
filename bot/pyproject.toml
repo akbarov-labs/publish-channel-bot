@@ -4,7 +4,7 @@ version = "0.1.0"
 description = "Two-way sync between a Telegram channel and an author's blog"
 requires-python = ">=3.11"
 dependencies = [
-    "aiogram>=3.13",
+    "aiogram>=3.31,<4",
     "fastapi>=0.115",
     "uvicorn[standard]>=0.30",
     "httpx>=0.27",
