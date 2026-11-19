@@ -1,7 +1,7 @@
 import re
 from functools import lru_cache
 
-from pydantic import model_validator
+from pydantic import field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 # What Telegram accepts as a webhook secret_token, at a length worth having.
@@ -28,6 +28,17 @@ class Settings(BaseSettings):
     import_rate_per_second: float = 8.0
     # Refresh the progress message every N message ids.
     import_progress_every: int = 25
+
+    # Where "/start join" requests from the reader site's "Request a page"
+    # button are forwarded: the admin's own user id, or a group's chat id.
+    # Unset, /start join gets the ordinary welcome instead.
+    admin_chat_id: int | None = None
+
+    @field_validator("admin_chat_id", mode="before")
+    @classmethod
+    def _blank_is_unset(cls, value: object) -> object:
+        # Compose passes ${ADMIN_CHAT_ID:-} through as an empty string.
+        return None if isinstance(value, str) and not value.strip() else value
 
     @property
     def telegram_webhook_path(self) -> str:

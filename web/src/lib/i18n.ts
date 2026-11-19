@@ -52,6 +52,21 @@ export type Dictionary = {
   lastPosted: (date: string) => string;
   directoryFooter: string;
 
+  // Root directory: the invitation to channel owners
+  joinTitle: string;
+  joinText: string;
+  joinAddressLabel: string;
+  joinAddressExample: string;
+  joinCta: string;
+  joinNote: string;
+  joinBenefitsTitle: string;
+  joinBenefits: { title: string; text: string }[];
+  joinStepsTitle: string;
+  joinSteps: (bot: string) => { title: string; text: string }[];
+  joinStripTitle: string;
+  joinStripText: string;
+  forAuthors: string;
+
   // An author's space
   posts: (count: number) => string;
   publishedOn: (site: string) => string;
@@ -116,6 +131,41 @@ const uz: Dictionary = {
   lastPosted: (date) => `oxirgisi ${date}`,
   directoryFooter: "Bu yerdagi har bir sahifa Telegram kanalida yozilgan.",
 
+  joinTitle: "Telegram kanalingiz\u00a0— endi sayt ham",
+  joinText:
+    "Kanalingizga odatdagidek yozaverasiz. Postlar, albomlar va telegra.ph maqolalari sahifangizga oʻzi tushadi — har biri ilk chiqqan sanasi bilan.",
+  joinAddressLabel: "Sahifangiz manzili",
+  joinAddressExample: "kanalingiz",
+  joinCta: "Sahifa soʻrash",
+  joinNote: "Hozircha mualliflarni oʻzimiz qoʻshamiz: botga yozing, sizga Telegramda javob beramiz.",
+  joinBenefitsTitle: "Nimalar olasiz",
+  joinBenefits: [
+    {
+      title: "Oʻz manzilingiz",
+      text: "Kanal tavsifiga bemalol qoʻyish mumkin boʻlgan doimiy havola. Har bir postning ham oʻz havolasi bor.",
+    },
+    {
+      title: "Hech narsani koʻchirib oʻtirmaysiz",
+      text: "Postlar, albomlar, videolar va telegra.ph maqolalari oʻzi koʻchadi. Telegramda tahrirlasangiz, saytda ham yangilanadi.",
+    },
+    {
+      title: "Arxivingiz ham birga keladi",
+      text: "Kanaldagi eski postlar ham asl sanalari bilan olib kelinadi — sahifangiz birinchi kundanoq toʻla.",
+    },
+  ],
+  joinStepsTitle: "Qanday ishlaydi",
+  joinSteps: (bot) => [
+    { title: "Botga yozing", text: `Tugmani bosing: @${bot} ochiladi va soʻrovingizni bizga yetkazadi.` },
+    {
+      title: "Sahifangizni ochamiz",
+      text: "Manzilni birga tanlaymiz va botni kanalingizga ulashga yordam beramiz. Bir necha daqiqalik ish.",
+    },
+    { title: "Yozishda davom eting", text: "Shundan keyin kanaldagi har bir post sahifangizda ham chiqadi." },
+  ],
+  joinStripTitle: "Telegram kanal yuritasizmi?",
+  joinStripText: "Unga shu yerda ham oʻz sahifasini oching.",
+  forAuthors: "Mualliflar uchun",
+
   posts: (count) => `${count} ta post`,
   publishedOn: (site) => `Telegramdan ${site} orqali chop etilgan`,
   noPostsTitle: "Hozircha postlar yoʻq",
@@ -175,6 +225,41 @@ const ru: Dictionary = {
   lastPosted: (date) => `последний ${date}`,
   directoryFooter: "Каждая страница здесь написана в Telegram-канале.",
 
+  joinTitle: "Ваш Telegram-канал\u00a0— теперь и сайт",
+  joinText:
+    "Вы пишете в канал, как и раньше. Посты, альбомы и статьи с telegra.ph сами появляются на вашей странице — каждая с датой первой публикации.",
+  joinAddressLabel: "Адрес вашей страницы",
+  joinAddressExample: "vash-kanal",
+  joinCta: "Запросить страницу",
+  joinNote: "Пока авторов добавляем вручную: напишите боту, и мы ответим вам в Telegram.",
+  joinBenefitsTitle: "Что вы получаете",
+  joinBenefits: [
+    {
+      title: "Свой адрес",
+      text: "Постоянная ссылка, которую не стыдно поставить в описание канала. И у каждого поста — своя.",
+    },
+    {
+      title: "Ничего не нужно переносить",
+      text: "Посты, альбомы, видео и статьи telegra.ph переезжают сами. Правки в Telegram обновляют и сайт.",
+    },
+    {
+      title: "Архив тоже переедет",
+      text: "Старые посты канала переносятся с исходными датами, так что страница полна с первого дня.",
+    },
+  ],
+  joinStepsTitle: "Как это работает",
+  joinSteps: (bot) => [
+    { title: "Напишите боту", text: `Нажмите кнопку: откроется @${bot} и передаст нам вашу заявку.` },
+    {
+      title: "Мы открываем страницу",
+      text: "Вместе выберем адрес и поможем подключить бота к каналу. Это несколько минут.",
+    },
+    { title: "Пишите дальше", text: "С этого момента каждый пост в канале выходит и на вашей странице." },
+  ],
+  joinStripTitle: "Ведёте Telegram-канал?",
+  joinStripText: "Откройте ему страницу и здесь.",
+  forAuthors: "Авторам",
+
   posts: (count) => plural("ru", count, { one: "# пост", few: "# поста", many: "# постов", other: "# поста" }),
   publishedOn: (site) => `Опубликовано из Telegram на ${site}`,
   noPostsTitle: "Пока нет постов",
@@ -232,6 +317,41 @@ const en: Dictionary = {
   latestPosts: (page) => (page === 1 ? "Latest posts" : `Latest posts, page ${page}`),
   lastPosted: (date) => `last ${date}`,
   directoryFooter: "Every page here is written in a Telegram channel.",
+
+  joinTitle: "Your Telegram channel, now a website too",
+  joinText:
+    "Keep writing in your channel as you do now. Posts, albums and telegra.ph articles land on your page on their own, each with the date it first went out.",
+  joinAddressLabel: "Your page’s address",
+  joinAddressExample: "yourchannel",
+  joinCta: "Request a page",
+  joinNote: "Authors are added by hand for now: message the bot and we’ll reply in Telegram.",
+  joinBenefitsTitle: "What you get",
+  joinBenefits: [
+    {
+      title: "An address of your own",
+      text: "A permanent link worth putting in your channel description, and a link of its own for every post.",
+    },
+    {
+      title: "Nothing to copy over",
+      text: "Posts, albums, videos and telegra.ph articles move across on their own. Edit in Telegram and the site follows.",
+    },
+    {
+      title: "Your archive comes too",
+      text: "The posts already in your channel are brought over with their original dates, so your page is full from day one.",
+    },
+  ],
+  joinStepsTitle: "How it works",
+  joinSteps: (bot) => [
+    { title: "Message the bot", text: `Press the button: @${bot} opens and passes your request on to us.` },
+    {
+      title: "We set up your page",
+      text: "We pick the address with you and help you add the bot to your channel. It takes a few minutes.",
+    },
+    { title: "Keep writing", text: "From then on, every post in your channel appears on your page as well." },
+  ],
+  joinStripTitle: "Run a Telegram channel?",
+  joinStripText: "Give it a page here as well.",
+  forAuthors: "For authors",
 
   posts: (count) => plural("en", count, { one: "# post", other: "# posts" }),
   publishedOn: (site) => `Published from Telegram on ${site}`,

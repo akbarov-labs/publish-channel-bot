@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
+import html
 import logging
 from datetime import datetime, timezone
 
 from aiogram import F, Router
+from aiogram.exceptions import TelegramAPIError
 from aiogram.filters import Command, CommandStart
-from aiogram.types import Message
+from aiogram.types import Message, User
 
 from app.config import get_settings
 from app.db import repo
@@ -33,6 +35,52 @@ WELCOME = (
     "Optional: /telegraph turns on Instant View for published articles.\n\n"
     "Then /status shows what is connected."
 )
+
+
+# "Request a page" on the reader site opens t.me/<bot>?start=join. Authors are
+# made by the admin, so the bot only takes the request and passes it on.
+JOIN_REPLY = {
+    "uz": "Rahmat! Soʻrovingiz yuborildi. Tez orada shu yerda, Telegramda sizga yozamiz.",
+    "ru": "Спасибо! Заявка отправлена. Скоро напишем вам здесь, в Telegram.",
+    "en": "Thanks! Your request is in. We’ll message you here in Telegram soon.",
+}
+
+
+def join_reply(language_code: str | None) -> str:
+    language = (language_code or "").split("-")[0].lower()
+    return JOIN_REPLY.get(language, JOIN_REPLY["en"])
+
+
+def join_notice(user: User) -> str:
+    """What the admin receives: who asked, with a link that opens a chat with them."""
+    name = html.escape(user.full_name)
+    handle = f" (@{html.escape(user.username)})" if user.username else ""
+    return (
+        f'<b>Page request</b> from <a href="tg://user?id={user.id}">{name}</a>{handle}\n'
+        f"id <code>{user.id}</code>, language {html.escape(user.language_code or '?')}"
+    )
+
+
+@router.message(CommandStart(deep_link=True, magic=F.args == "join"))
+async def on_join_request(message: Message) -> None:
+    admin_chat_id = get_settings().admin_chat_id
+    if admin_chat_id is None:
+        log.warning("page request from %s, but ADMIN_CHAT_ID is not set", message.from_user.id)
+        await on_start(message)
+        return
+
+    async with session_scope() as session:
+        await repo.get_or_create_author(
+            session, message.from_user.id, message.from_user.username
+        )
+    try:
+        await message.bot.send_message(admin_chat_id, join_notice(message.from_user))
+    except TelegramAPIError:
+        # The request would be lost silently, so don't tell the user it was sent.
+        log.exception("could not forward a page request to ADMIN_CHAT_ID %s", admin_chat_id)
+        await on_start(message)
+        return
+    await message.answer(join_reply(message.from_user.language_code))
 
 
 @router.message(CommandStart())
