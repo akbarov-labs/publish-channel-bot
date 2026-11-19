@@ -194,6 +194,19 @@ subdomain) and the site's language, then connect the channel as described in
 the README ("Connecting an author"). The blog API base URL the bot asks for
 is `https://admin.DOMAIN/api/telegram`.
 
+**Inviting more authors (optional).** With `BOT_USERNAME` and `ADMIN_CHAT_ID`
+set in `.env`, the root domain opens with an invitation to channel owners
+while it has fewer than three authors, then shrinks it to one line above
+the footer. Its "Request a page" button opens the bot with `/start join`; the
+bot thanks them in their Telegram language and sends you a message with a
+link to their profile, so you can make their account and help them connect.
+Send the bot `/start` yourself once first, or Telegram won't let it write to
+you. Staging takes its own test bot's username. After editing `.env`:
+
+```bash
+sudo docker compose -f docker-compose.prod.yml up -d bot web
+```
+
 ### 10. Off-site backups
 
 Add to `/etc/offsite-backup/sources` (`sudo nano`), then

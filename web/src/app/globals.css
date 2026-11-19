@@ -275,7 +275,29 @@ body {
   color: inherit;
 }
 
+/* The address specimen on the root domain: the system's own green caret,
+   blinking where the author's name will go. */
+.caret {
+  display: inline-block;
+  width: 2px;
+  height: 0.95em;
+  margin-left: 2px;
+  vertical-align: -0.1em;
+  background: var(--accent);
+  animation: caret-blink 1.1s steps(1) infinite;
+}
+
+@keyframes caret-blink {
+  50% {
+    opacity: 0;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
+  .caret {
+    animation: none;
+  }
+
   *,
   *::before,
   *::after {

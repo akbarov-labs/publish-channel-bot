@@ -1,0 +1,14 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "design-system-font",
+        "value": "sfmono-regular",
+        "createdAt": "2026-11-19T09:39:25.873Z",
+        "reason": "DESIGN.md Typography names ui-monospace, SFMono-Regular, Menlo as the code stack; pre-existing line, not part of this change"
+      }
+    ]
+  }
+}

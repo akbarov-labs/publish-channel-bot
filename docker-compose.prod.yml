@@ -72,6 +72,8 @@ services:
       PUBLIC_BASE_URL: https://bot.${DOMAIN:?set DOMAIN in .env}
       TELEGRAM_MODE: webhook
       TELEGRAM_WEBHOOK_SECRET: ${TELEGRAM_WEBHOOK_SECRET:?set TELEGRAM_WEBHOOK_SECRET in .env}
+      # Where "Request a page" requests from the reader site go (your user id).
+      ADMIN_CHAT_ID: ${ADMIN_CHAT_ID:-}
     networks:
       default: {}
       edge: {}
@@ -149,6 +151,9 @@ services:
       DEFAULT_LOCALE: ${DEFAULT_LOCALE:-uz}
       # The platform's name on the root directory and in footers.
       SITE_NAME: ${SITE_NAME:-Channels}
+      # This stack's bot, without the @. Set, the root domain invites channel
+      # owners to request a page through it (needs ADMIN_CHAT_ID on the bot).
+      BOT_USERNAME: ${BOT_USERNAME:-}
     networks:
       default: {}
       edge: {}

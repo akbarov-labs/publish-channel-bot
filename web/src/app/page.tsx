@@ -1,15 +1,20 @@
 import Avatar from "@/components/Avatar";
+import { AuthorDetails, AuthorLanding, JoinStrip } from "@/components/JoinAuthors";
 import Pagination, { pageFrom } from "@/components/Pagination";
 import { PostRow } from "@/components/PostRow";
 import SiteBar from "@/components/SiteBar";
 import { getAuthors, getLatestPosts, type Author } from "@/lib/api";
 import { authorUrl } from "@/lib/hosts";
-import { SITE_NAME } from "@/lib/site";
+import { BOT_USERNAME, SITE_NAME } from "@/lib/site";
 import { defaultLocale, dict, formatDate, type Dictionary, type Locale } from "@/lib/i18n";
 
 // Rendered per request so the image can be built without the blog API being
 // reachable. The 60s fetch cache in lib/api still absorbs the traffic.
 export const dynamic = "force-dynamic";
+
+// Below this many authors the root domain opens with the invitation to
+// channel owners; from here on it is a directory with a one-line invitation.
+const FULL_DIRECTORY = 3;
 
 export const metadata = {
   title: { absolute: SITE_NAME },
@@ -40,13 +45,24 @@ export default async function Home({ searchParams }: PageProps<"/">) {
   const [authors, posts] = await Promise.all([getAuthors(), getLatestPosts(page)]);
   const locale = defaultLocale();
   const t = dict(locale);
+  const bot = BOT_USERNAME;
+  const inviting = bot !== null && authors.length < FULL_DIRECTORY;
+  const isEmpty = authors.length === 0 && posts.data.length === 0;
 
   return (
     <>
-      <SiteBar />
+      <SiteBar>
+        {bot && !inviting && (
+          <a href="#join" className="text-[0.875rem] font-medium text-muted transition-colors duration-150 ease-out hover:text-ink">
+            {t.forAuthors}
+          </a>
+        )}
+      </SiteBar>
 
       <main className="mx-auto w-full max-w-[1120px] flex-1 px-4 sm:px-6">
-        {page === 1 && (
+        {page === 1 && inviting && <AuthorLanding bot={bot} locale={locale} />}
+
+        {page === 1 && !inviting && (
           <section className="border-b border-line py-12 sm:py-16">
             <h1 className="title max-w-[18ch] text-[2.25rem] leading-[1.08] sm:text-[3.5rem]">
               {t.heroTitle}
@@ -57,7 +73,7 @@ export default async function Home({ searchParams }: PageProps<"/">) {
           </section>
         )}
 
-        {authors.length === 0 && posts.data.length === 0 ? (
+        {isEmpty && inviting ? null : isEmpty ? (
           <section className="py-20 text-center">
             <h2 className="title text-2xl">{t.emptyTitle}</h2>
             <p className="mx-auto mt-3 max-w-[46ch] text-muted">
@@ -120,7 +136,15 @@ export default async function Home({ searchParams }: PageProps<"/">) {
             )}
           </div>
         )}
+
+        {page === 1 && inviting && (
+          <div className={isEmpty ? undefined : "mt-12 border-t border-line"}>
+            <AuthorDetails bot={bot} locale={locale} />
+          </div>
+        )}
       </main>
+
+      {bot && !inviting && <JoinStrip bot={bot} locale={locale} />}
 
       <footer className="mt-16 border-t border-line">
         <div className="mx-auto max-w-[1120px] px-4 py-8 text-sm text-muted sm:px-6">
