@@ -133,7 +133,7 @@ const uz: Dictionary = {
 
   joinTitle: "Telegram kanalingiz\u00a0— endi sayt ham",
   joinText:
-    "Kanalingizga odatdagidek yozaverasiz. Postlar, albomlar va telegra.ph maqolalari sahifangizga oʻzi tushadi — har biri ilk chiqqan sanasi bilan.",
+    "Kanalingizda odatdagidek yozaverasiz. Postlar, albomlar va telegra.ph maqolalari sahifangizga oʻzi tushadi — har biri ilk chiqqan sanasi bilan.",
   joinAddressLabel: "Sahifangiz manzili",
   joinAddressExample: "kanalingiz",
   joinCta: "Sahifa soʻrash",
@@ -146,11 +146,11 @@ const uz: Dictionary = {
     },
     {
       title: "Hech narsani koʻchirib oʻtirmaysiz",
-      text: "Postlar, albomlar, videolar va telegra.ph maqolalari oʻzi koʻchadi. Telegramda tahrirlasangiz, saytda ham yangilanadi.",
+      text: "Postlar, albomlar, videolar va telegra.ph maqolalari oʻz-oʻzidan koʻchib oʻtadi. Telegramda tahrirlasangiz, saytda ham yangilanadi.",
     },
     {
       title: "Arxivingiz ham birga keladi",
-      text: "Kanaldagi eski postlar ham asl sanalari bilan olib kelinadi — sahifangiz birinchi kundanoq toʻla.",
+      text: "Kanaldagi eski postlar ham asl sanalari bilan olib kelinadi — sahifangiz birinchi kundanoq boʻsh boʻlmaydi.",
     },
   ],
   joinStepsTitle: "Qanday ishlaydi",
@@ -163,7 +163,7 @@ const uz: Dictionary = {
     { title: "Yozishda davom eting", text: "Shundan keyin kanaldagi har bir post sahifangizda ham chiqadi." },
   ],
   joinStripTitle: "Telegram kanal yuritasizmi?",
-  joinStripText: "Unga shu yerda ham oʻz sahifasini oching.",
+  joinStripText: "Kanalingiz uchun shu yerda ham sahifa oching.",
   forAuthors: "Mualliflar uchun",
 
   posts: (count) => `${count} ta post`,
