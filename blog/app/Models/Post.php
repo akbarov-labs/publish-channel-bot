@@ -89,6 +89,9 @@ class Post extends Model
      */
     public static function excerptFrom(?string $html, int $limit = 280): string
     {
+        // Footnotes ("[^1]" markers and "[^1]: ..." notes) are for the page, not a summary.
+        $html = preg_replace('~<p>\s*\[\^[^\]\s]{1,20}\]:[\s\S]*?</p>~i', '', (string) $html);
+        $html = preg_replace('~\[\^[^\]\s]{1,20}\]~', '', (string) $html);
         $marked = preg_replace('~(</(?:p|h[1-6]|li|blockquote|div|pre|figure|figcaption)>|<br\s*/?>)~i', "$1\n", (string) $html);
         $text = html_entity_decode(strip_tags((string) $marked), ENT_QUOTES | ENT_HTML5, 'UTF-8');
 

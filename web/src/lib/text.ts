@@ -46,7 +46,8 @@ export function withoutLeadingTitle(html: string, title: string): string {
 /** The excerpt minus a repeated title, or null when nothing is left. */
 export function cleanExcerpt(post: Pick<PostSummary, "excerpt" | "title">): string | null {
   if (!post.excerpt) return null;
-  const excerpt = post.excerpt.trim();
+  // Footnote markers ("[^1]") mean nothing out of the post.
+  const excerpt = post.excerpt.replace(/\[\^[^\]\s]{1,20}\]:?/g, "").replace(/\s{2,}/g, " ").trim();
   const title = post.title.trim();
   // The API ends each block with a full stop, so the title leaves one behind.
   const rest = excerpt.startsWith(title) ? excerpt.slice(title.length).replace(/^[.:;!?…\s]+/, "") : excerpt;

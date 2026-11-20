@@ -76,4 +76,12 @@ class SeriesTest extends TestCase
         User::factory()->create()->series()->create(['title' => 'Somebody else']);
         $this->get('/admin/series')->assertOk()->assertSee('Notes from Khiva')->assertDontSee('Somebody else');
     }
+
+    public function test_footnotes_stay_out_of_the_excerpt(): void
+    {
+        $this->assertSame(
+            'Intro with a note. More text.',
+            \App\Models\Post::excerptFrom('<p>Intro with a note.[^1]</p><p>More text.</p><p>[^1]: The note itself.</p>'),
+        );
+    }
 }

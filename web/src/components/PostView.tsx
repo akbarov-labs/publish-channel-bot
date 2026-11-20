@@ -89,8 +89,12 @@ export default function PostView({ post, preview = false }: { post: Post; previe
                       : post.post_type === "poll"
                         ? t.poll
                         : t.minutesRead(minutes)}
-                <span aria-hidden="true"> · </span>
-                <time dateTime={post.published_at ?? undefined}>{formatDate(post.published_at, locale)}</time>
+                {post.published_at && (
+                  <>
+                    <span aria-hidden="true"> · </span>
+                    <time dateTime={post.published_at}>{formatDate(post.published_at, locale)}</time>
+                  </>
+                )}
                 {post.views ? (
                   <>
                     <span aria-hidden="true"> · </span>

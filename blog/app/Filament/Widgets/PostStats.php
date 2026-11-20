@@ -64,7 +64,7 @@ class PostStats extends StatsOverviewWidget
             Stat::make('Published posts', number_format($published))
                 ->description(collect([
                     $scheduled ? "{$scheduled} scheduled" : null,
-                    $drafts ? "{$drafts} drafts" : null,
+                    $drafts ? $drafts.' '.\Illuminate\Support\Str::plural('draft', $drafts) : null,
                 ])->filter()->implode(' · ') ?: null),
             Stat::make('Reactions in the channel', number_format($reactions)),
         ];

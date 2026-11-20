@@ -3,6 +3,10 @@ import { rss } from "@/lib/feed";
 import { authorUrl } from "@/lib/hosts";
 import { dict, localeOf } from "@/lib/i18n";
 
+// Built per request from the blog (and the host): nothing to prerender at build
+// time, when the API is not there. The API fetches keep their own short cache.
+export const dynamic = "force-dynamic";
+
 // <username>.<root>/feed.xml, through the proxy: the author's latest posts, in full.
 export async function GET(_request: Request, { params }: RouteContext<"/site/[author]/feed.xml">) {
   const { author: username } = await params;

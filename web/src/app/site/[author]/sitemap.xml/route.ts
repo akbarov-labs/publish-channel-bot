@@ -2,6 +2,10 @@ import { getAuthor, getAuthorSitemap, getAuthorTopics } from "@/lib/api";
 import { sitemap } from "@/lib/feed";
 import { authorUrl } from "@/lib/hosts";
 
+// Built per request from the blog (and the host): nothing to prerender at build
+// time, when the API is not there. The API fetches keep their own short cache.
+export const dynamic = "force-dynamic";
+
 // <username>.<root>/sitemap.xml, through the proxy. Sitemaps may only list
 // addresses on their own host, so each author has one of their own.
 export async function GET(_request: Request, { params }: RouteContext<"/site/[author]/sitemap.xml">) {
