@@ -59,7 +59,17 @@ class User extends Authenticatable implements FilamentUser
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'webhook_secret' => 'encrypted',
+            'is_admin' => 'boolean',
         ];
+    }
+
+    /**
+     * The platform's admin, who handles page requests. Not fillable: it is set
+     * once by the migration (for the oldest account) or by hand, never by a form.
+     */
+    public function isAdmin(): bool
+    {
+        return (bool) $this->is_admin;
     }
 
     /**

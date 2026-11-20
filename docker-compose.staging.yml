@@ -75,6 +75,10 @@ services:
       TELEGRAM_WEBHOOK_SECRET: ${TELEGRAM_WEBHOOK_SECRET:?set TELEGRAM_WEBHOOK_SECRET in .env}
       # Where "Request a page" requests from the reader site go (your user id).
       ADMIN_CHAT_ID: ${ADMIN_CHAT_ID:-}
+      # The same requests also land in the admin's "Page requests" list:
+      # the blog over this stack's own network, with a secret both share.
+      BLOG_INTERNAL_URL: http://pcb-blog/api
+      BOT_INTERNAL_SECRET: ${BOT_INTERNAL_SECRET:-}
     networks:
       default: {}
       edge: {}
@@ -115,6 +119,9 @@ services:
       FILESYSTEM_DISK: local
       MAIL_MAILER: log
       TLS_ASK_PEER_URL: http://pcb-tls-ask-production/api/tls/allowed
+      # Lets the bot record page requests (/api/internal/*). Unset, those
+      # routes answer 404 and requests reach the admin only in Telegram.
+      BOT_INTERNAL_SECRET: ${BOT_INTERNAL_SECRET:-}
     networks:
       default:
         aliases: [pcb-blog]
@@ -123,7 +130,8 @@ services:
     labels:
       caddy: admin.${DOMAIN}
       caddy.header: X-Robots-Tag "noindex, nofollow"
-      caddy.respond: /api/tls/* 404
+      caddy.@internal.path: /api/tls/* /api/internal/*
+      caddy.respond: "@internal 404"
       # By container name, not {{upstreams 80}}: that renders as a bare
       # :80 while the container restarts (kitoblarim.uz 502s, 2026-11-16).
       caddy.reverse_proxy: "publish-channel-bot-staging-blog-1:80"
