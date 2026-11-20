@@ -2,13 +2,14 @@
 
 from __future__ import annotations
 
+import html
 import logging
 
 from aiogram import Bot, F, Router
 from aiogram.types import ChatMemberUpdated, Message
 
 from app.db import repo
-from app.db.models import Channel
+from app.db.models import WaitingChannel
 from app.db.session import session_scope
 from app.services.site_client import SiteError
 from app.services.sync import channel_edit_to_site, channel_post_to_site
@@ -28,37 +29,47 @@ async def on_bot_membership_change(event: ChatMemberUpdated, bot: Bot) -> None:
             channel = await repo.get_channel(session, event.chat.id)
             if channel is not None:
                 channel.active = False
+            waiting = await session.get(WaitingChannel, event.chat.id)
+            if waiting is not None:
+                await session.delete(waiting)
         log.info("bot lost admin in channel %s, sync paused", event.chat.id)
         return
 
     actor = event.from_user
+    title = html.escape(event.chat.title or str(event.chat.id))
     async with session_scope() as session:
-        channel = await repo.get_channel(session, event.chat.id)
-        if channel is not None:
-            channel.title = event.chat.title
-            return
-
         site = await repo.latest_site_for_user(session, actor.id) if actor else None
         if site is None:
-            await _notify(bot, actor.id if actor else None,
-                          "I was added to a channel, but you have not connected a blog yet. "
-                          "Send /connect here first, then send /activate in the channel.")
+            existing = await repo.get_channel(session, event.chat.id)
+            if existing is not None:
+                # Still bound to whoever connected it; just back on.
+                existing.active = True
+                existing.title = event.chat.title
+                return
+            if actor is not None:
+                await session.merge(
+                    WaitingChannel(
+                        telegram_chat_id=event.chat.id,
+                        telegram_user_id=actor.id,
+                        title=event.chat.title,
+                    )
+                )
+            await _notify(
+                bot,
+                actor.id if actor else None,
+                f"I'm in <b>{title}</b>. Send /connect here to link your blog, "
+                "and syncing starts right after.",
+            )
             return
 
-        session.add(
-            Channel(
-                site_id=site.id,
-                telegram_chat_id=event.chat.id,
-                title=event.chat.title,
-                active=False,
-            )
-        )
+        await repo.bind_channel(session, site, event.chat.id, event.chat.title)
 
     await _notify(
         bot,
         actor.id if actor else None,
-        f"Linked <b>{event.chat.title}</b> to your blog.\n"
-        "Send <code>/activate</code> in the channel to start syncing.",
+        f"✅ Syncing is on in <b>{title}</b>: posts there appear on your page, and posts "
+        "you publish in the admin appear in the channel.\n\n"
+        "/import brings in the posts already in the channel.",
     )
 
 
@@ -68,7 +79,13 @@ async def on_channel_command(message: Message, bot: Bot) -> None:
     async with session_scope() as session:
         channel = await repo.get_channel(session, message.chat.id)
         if channel is None:
+            # Channel posts don't say who sent them, so the owner is unknown.
             log.info("command %s in unlinked channel %s", command, message.chat.id)
+            await bot.send_message(
+                message.chat.id,
+                "I don't know whose channel this is yet. Remove me from the admins and "
+                "add me again, and I'll write to you.",
+            )
             return
         if command == "/activate":
             channel.active = True

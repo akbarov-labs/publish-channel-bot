@@ -16,6 +16,7 @@ from app.db import repo
 from app.db.models import PendingConnection, Site
 from app.db.session import session_scope
 from app.services.crypto import encrypt, new_webhook_secret
+from app.services.blog_connect import BlogConnectError, Connected, connect_by_telegram
 from app.services.page_requests import PageRequestError, record_page_request
 from app.services.site_client import SiteClient, SiteError
 from app.services.telegraph import TelegraphClient, TelegraphError
@@ -28,10 +29,10 @@ WELCOME = (
     "<b>Blog ↔ Channel sync</b>\n\n"
     "I keep a Telegram channel and your blog in step, in both directions.\n\n"
     "<b>Setup</b>\n"
-    "1. /connect — link your blog's API\n"
-    "2. Add me to your channel as an admin with <i>Post messages</i>\n"
-    "3. Send <code>/activate</code> in the channel\n"
-    "4. /import — turn the posts already in your channel into a blog, "
+    "1. /connect — link your blog\n"
+    "2. Add me to your channel as an admin with <i>Post messages</i>. "
+    "Syncing starts by itself.\n"
+    "3. /import — turn the posts already in your channel into a blog, "
     "each keeping the date it was first published\n\n"
     "Optional: /telegraph turns on Instant View for published articles.\n\n"
     "Then /status shows what is connected."
@@ -117,13 +118,45 @@ async def on_cancel(message: Message) -> None:
 
 @router.message(Command("connect"))
 async def on_connect(message: Message) -> None:
+    settings = get_settings()
+    user = message.from_user
     async with session_scope() as session:
-        await repo.get_or_create_author(
-            session, message.from_user.id, message.from_user.username
-        )
-        await session.merge(
-            PendingConnection(telegram_user_id=message.from_user.id, step="api_base", api_base=None)
-        )
+        await repo.get_or_create_author(session, user.id, user.username)
+
+    if settings.knows_the_blog:
+        secret = new_webhook_secret()
+        try:
+            result = await connect_by_telegram(
+                user.id,
+                webhook_url=webhook_url_for(secret),
+                webhook_secret=secret,
+                base_url=settings.blog_internal_url,
+                secret=settings.bot_internal_secret,
+            )
+        except BlogConnectError:
+            log.exception("could not ask the blog to connect %s", user.id)
+        else:
+            if isinstance(result, Connected):
+                async with session_scope() as session:
+                    site = await save_site(session, user, result.api_base, result.token, secret)
+                    channels = await repo.bind_waiting_channels(session, user.id, site)
+                    titles = [channel.title or str(channel.telegram_chat_id) for channel in channels]
+                await message.answer(connected_text(result.page_url, titles))
+                return
+            async with session_scope() as session:
+                await session.merge(
+                    PendingConnection(telegram_user_id=user.id, step="api_token", api_base=result.api_base)
+                )
+            await message.answer(
+                "Open your profile in the admin:\n"
+                f"{html.escape(result.admin_url)}\n\n"
+                "Press <b>Generate bot token</b> at the top, copy the token and send it here.\n"
+                "/cancel to stop."
+            )
+            return
+
+    async with session_scope() as session:
+        await session.merge(PendingConnection(telegram_user_id=user.id, step="api_base", api_base=None))
     await message.answer(
         "Send your blog's API base URL, for example:\n"
         "<code>https://myblog.com/api/telegram</code>\n\n"
@@ -131,6 +164,60 @@ async def on_connect(message: Message) -> None:
         "<code>PATCH /posts/{id}</code> and <code>POST /media</code>.\n"
         "/cancel to stop."
     )
+
+
+@router.message(Command("activate"))
+async def on_activate_in_dm(message: Message) -> None:
+    """/activate belongs in the channel, but people send it here too."""
+    async with session_scope() as session:
+        channels = await repo.channels_for_user(session, message.from_user.id)
+        for channel in channels:
+            channel.active = True
+        titles = [channel.title or str(channel.telegram_chat_id) for channel in channels]
+    if titles:
+        await message.answer("✅ Syncing is on in " + ", ".join(f"<b>{html.escape(t)}</b>" for t in titles) + ".")
+    else:
+        await message.answer(
+            "No channel yet. Add me to your channel as an admin with <i>Post messages</i>; "
+            "syncing starts by itself."
+        )
+
+
+def webhook_url_for(secret: str) -> str:
+    return f"{get_settings().public_base_url.rstrip('/')}/webhooks/site/{secret}"
+
+
+async def save_site(session, user: User, api_base: str, token: str, webhook_secret: str | None = None) -> Site:
+    """Stores the connection, updating an earlier one to the same blog so the
+    channels bound to it keep working. Without webhook_secret, an earlier
+    connection keeps the secret its blog already has."""
+    author = await repo.get_or_create_author(session, user.id, user.username)
+    site = await repo.site_for_author(session, author.id, api_base)
+    if site is None:
+        site = Site(author_id=author.id, api_base=api_base, webhook_secret=webhook_secret or new_webhook_secret())
+        session.add(site)
+    elif webhook_secret:
+        site.webhook_secret = webhook_secret
+    site.api_token_encrypted = encrypt(token)
+    site.verified_at = datetime.now(timezone.utc)
+    await session.flush()
+    return site
+
+
+def next_step_text(channel_titles: list[str]) -> str:
+    if channel_titles:
+        names = ", ".join(f"<b>{html.escape(t)}</b>" for t in channel_titles)
+        return (
+            f"Syncing is on in {names}: posts there appear on your page, and posts "
+            "you publish in the admin appear in the channel.\n\n"
+            "/import brings in the posts already in the channel."
+        )
+    return "Now add me to your channel as an admin with <i>Post messages</i>. Syncing starts by itself."
+
+
+def connected_text(page_url: str, channel_titles: list[str]) -> str:
+    where = f" Your page: {html.escape(page_url)}" if page_url else ""
+    return f"✅ Connected.{where}\n\n{next_step_text(channel_titles)}"
 
 
 @router.message(Command("status"))
@@ -191,7 +278,6 @@ async def on_telegraph(message: Message) -> None:
 @router.message(F.text & ~F.text.startswith("/"))
 async def on_connect_input(message: Message) -> None:
     """Handles the two free-text steps of /connect."""
-    settings = get_settings()
     value = message.text.strip()
 
     async with session_scope() as session:
@@ -217,35 +303,35 @@ async def on_connect_input(message: Message) -> None:
 
         api_base = pending.api_base or ""
         try:
-            await SiteClient(api_base, value).ping()
+            client = SiteClient(api_base, value)
+            ping = await client.ping()
         except SiteError as exc:
             log.warning("site verification failed for %s: %s", api_base, exc)
             await message.answer(
-                f"Could not verify the blog:\n<code>{exc}</code>\n\n"
+                f"Could not verify the blog:\n<code>{html.escape(str(exc))}</code>\n\n"
                 "Send the token again, or /cancel."
             )
             return
 
-        author = await repo.get_or_create_author(
-            session, message.from_user.id, message.from_user.username
-        )
-        secret = new_webhook_secret()
-        site = Site(
-            author_id=author.id,
-            api_base=api_base,
-            api_token_encrypted=encrypt(value),
-            webhook_secret=secret,
-            verified_at=datetime.now(timezone.utc),
-        )
-        session.add(site)
+        site = await save_site(session, message.from_user, api_base, value)
+        secret = site.webhook_secret
+        channels = await repo.bind_waiting_channels(session, message.from_user.id, site)
+        titles = [channel.title or str(channel.telegram_chat_id) for channel in channels]
         await repo.clear_pending(session, message.from_user.id)
 
-    webhook_url = f"{settings.public_base_url.rstrip('/')}/webhooks/site/{secret}"
-    await message.answer(
-        "✅ Blog connected.\n\n"
-        "Point your blog's publish webhook at:\n"
-        f"<code>{webhook_url}</code>\n\n"
-        "Sign the raw request body with HMAC-SHA256 using that same secret and send it as "
-        "<code>X-Signature</code>.\n\n"
-        "Next: add me to your channel as an admin, then send <code>/activate</code> there."
-    )
+    webhook_url = webhook_url_for(secret)
+    try:
+        await client.set_webhook(webhook_url, secret)
+    except SiteError as exc:
+        # A blog of its own, without PUT /webhook: the author pastes it.
+        log.info("blog %s did not take the webhook: %s", api_base, exc)
+        await message.answer(
+            "✅ Blog connected.\n\n"
+            "Point your blog's publish webhook at:\n"
+            f"<code>{webhook_url}</code>\n\n"
+            "Sign the raw request body with HMAC-SHA256 using that same secret and send it as "
+            "<code>X-Signature</code>."
+        )
+        await message.answer(next_step_text(titles))
+        return
+    await message.answer(connected_text(str(ping.get("url") or ""), titles))

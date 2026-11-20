@@ -20,7 +20,7 @@ router = Router(name="importing")
 NO_CHANNEL = (
     "No channel is linked yet.\n\n"
     "Add me to your channel as an admin with <i>Post messages</i>, "
-    "send <code>/activate</code> there, then come back and run /import."
+    "then come back and run /import."
 )
 
 PROTECTED = (
@@ -85,7 +85,7 @@ async def on_import(message: Message, bot: Bot) -> None:
 
         channel = channels[0]
         if not channel.active:
-            await message.answer("Send <code>/activate</code> in the channel first.")
+            await message.answer("Syncing is paused in that channel. Send /activate here to turn it back on.")
             return
         running = await repo.unfinished_import(session, channel.id)
         if running is not None:
@@ -146,7 +146,7 @@ async def on_channel_import(message: Message, bot: Bot) -> None:
         if channel is None:
             return
         if not channel.active:
-            await bot.send_message(message.chat.id, "Send /activate first.")
+            await bot.send_message(message.chat.id, "Syncing is paused here. Send /activate first.")
             return
         author = await repo.author_for_channel(session, channel)
         if author is None:

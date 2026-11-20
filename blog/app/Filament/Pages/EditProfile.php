@@ -74,7 +74,7 @@ class EditProfile extends BaseEditProfile
                     ]),
 
                 Section::make('Telegram bot')
-                    ->description('Use "Generate bot token" above and send the token to the bot during /connect. The bot replies with the webhook URL and secret for these two fields.')
+                    ->description('Filled in by the bot when you send it /connect. You only need to touch these for a blog the bot cannot reach on its own.')
                     ->schema([
                         TextInput::make('webhook_url')
                             ->label('Webhook URL')

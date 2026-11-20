@@ -50,6 +50,10 @@ class SiteClient:
         """Used during /connect to prove the base URL and token are valid."""
         return await self._request("GET", "/ping")
 
+    async def set_webhook(self, url: str, secret: str) -> None:
+        """Tells the blog where to announce posts published in its admin."""
+        await self._request("PUT", "/webhook", json={"url": url, "secret": secret})
+
     async def create_post(
         self,
         *,

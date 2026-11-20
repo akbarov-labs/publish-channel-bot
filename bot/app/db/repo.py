@@ -6,7 +6,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.db.models import Author, Channel, ImportJob, PendingConnection, Site
+from app.db.models import Author, Channel, ImportJob, PendingConnection, Site, WaitingChannel
 
 
 async def get_or_create_author(
@@ -43,6 +43,49 @@ async def latest_site_for_user(session: AsyncSession, telegram_user_id: int) -> 
         .limit(1)
     )
     return result.scalar_one_or_none()
+
+
+async def site_for_author(session: AsyncSession, author_id: int, api_base: str) -> Site | None:
+    """The author's existing connection to this blog, so reconnecting updates
+    it in place and the channels bound to it keep working."""
+    result = await session.execute(
+        select(Site)
+        .where(Site.author_id == author_id, Site.api_base == api_base)
+        .order_by(Site.created_at.desc())
+        .limit(1)
+    )
+    return result.scalar_one_or_none()
+
+
+async def bind_channel(
+    session: AsyncSession, site: Site, telegram_chat_id: int, title: str | None
+) -> Channel:
+    """Binds a channel to the blog and switches syncing on."""
+    channel = await get_channel(session, telegram_chat_id)
+    if channel is None:
+        channel = Channel(site_id=site.id, telegram_chat_id=telegram_chat_id, title=title, active=True)
+        session.add(channel)
+    else:
+        channel.site_id = site.id
+        channel.active = True
+        if title:
+            channel.title = title
+    await session.flush()
+    return channel
+
+
+async def bind_waiting_channels(
+    session: AsyncSession, telegram_user_id: int, site: Site
+) -> list[Channel]:
+    """Channels this user made the bot admin of before connecting."""
+    result = await session.execute(
+        select(WaitingChannel).where(WaitingChannel.telegram_user_id == telegram_user_id)
+    )
+    bound = []
+    for waiting in result.scalars().all():
+        bound.append(await bind_channel(session, site, waiting.telegram_chat_id, waiting.title))
+        await session.delete(waiting)
+    return bound
 
 
 async def get_channel(session: AsyncSession, telegram_chat_id: int) -> Channel | None:

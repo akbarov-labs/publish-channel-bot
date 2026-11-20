@@ -52,6 +52,12 @@ class Settings(BaseSettings):
         return bool(self.blog_internal_url and self.bot_internal_secret)
 
     @property
+    def knows_the_blog(self) -> bool:
+        """The bot runs beside the platform's own blog, so /connect can skip
+        asking for its address and fetch the rest itself."""
+        return self.records_page_requests
+
+    @property
     def telegram_webhook_path(self) -> str:
         return "/telegram/webhook"
 
