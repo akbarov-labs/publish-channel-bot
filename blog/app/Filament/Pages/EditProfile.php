@@ -6,6 +6,7 @@ use App\Models\User;
 use Filament\Actions\Action;
 use Filament\Auth\Pages\EditProfile as BaseEditProfile;
 use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Radio;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -63,6 +64,18 @@ class EditProfile extends BaseEditProfile
                             ->required()
                             ->selectablePlaceholder(false)
                             ->helperText('The language of buttons, labels and dates on your space. Your posts stay in the language you write them in.'),
+                    ]),
+
+                Section::make('Site design')
+                    ->description('How your space looks to readers. You can change it any time; posts stay as they are.')
+                    ->schema([
+                        Radio::make('template')
+                            ->hiddenLabel()
+                            ->options(array_map(fn (array $template) => $template[0], User::TEMPLATES))
+                            ->descriptions(array_map(fn (array $template) => $template[1], User::TEMPLATES))
+                            ->in(array_keys(User::TEMPLATES))
+                            ->default('classic')
+                            ->required(),
                     ]),
 
                 Section::make('Account')

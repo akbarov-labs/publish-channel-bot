@@ -347,3 +347,58 @@ body {
 .prose-post :is(h2, h3, h4)[id] {
   scroll-margin-top: 5rem;
 }
+
+/* ---- Templates an author can pick: data-template on <html>. ---- */
+
+/* Magazine: image-led, a warm orange accent, heavier titles. */
+[data-template="magazine"] {
+  --accent: #c2410c;
+  --accent-soft: #fdeee6;
+  --on-accent: #ffffff;
+}
+
+@media (prefers-color-scheme: dark) {
+  [data-template="magazine"] {
+    --accent: #fb8a4c;
+    --accent-soft: #33190d;
+    --on-accent: #1f0d04;
+  }
+}
+
+[data-template="magazine"] .title {
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+/* Notebook: text first, on warm paper, with serif titles and an ink-red accent. */
+[data-template="notebook"] {
+  --bg: #fbf8f1;
+  --surface: #f3eee2;
+  --ink: #2a2420;
+  --ink-soft: #4a413a;
+  --muted: #74695e;
+  --line: #e6ddcc;
+  --accent: #9b2c2c;
+  --accent-soft: #f6e3df;
+  --on-accent: #ffffff;
+}
+
+@media (prefers-color-scheme: dark) {
+  [data-template="notebook"] {
+    --bg: #17140f;
+    --surface: #211d17;
+    --ink: #ede6da;
+    --ink-soft: #d3c9b9;
+    --muted: #a3988a;
+    --line: #2e2820;
+    --accent: #e58b7d;
+    --accent-soft: #3a201c;
+    --on-accent: #1c0f0c;
+  }
+}
+
+[data-template="notebook"] .title {
+  font-family: var(--font-serif);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}

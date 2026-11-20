@@ -16,6 +16,8 @@ export type Author = {
   site_url: string;
   /** The language of the author's interface; posts keep their own. */
   locale?: string;
+  /** The design the author picked: classic, magazine or notebook. */
+  template?: string;
   posts_count?: number;
   latest_post_at?: string | null;
 };

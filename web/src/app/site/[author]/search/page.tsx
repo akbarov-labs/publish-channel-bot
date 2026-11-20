@@ -2,9 +2,10 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Search } from "@/components/Icons";
 import Pagination, { pageFrom } from "@/components/Pagination";
-import { PostRow } from "@/components/PostRow";
+import PostList from "@/components/PostList";
 import { getAuthor, searchPosts } from "@/lib/api";
 import { dict, localeOf } from "@/lib/i18n";
+import { templateOf } from "@/lib/templates";
 
 type Props = PageProps<"/site/[author]/search">;
 
@@ -72,10 +73,8 @@ export default async function SearchPage({ params, searchParams }: Props) {
           <p className="mt-8 text-sm text-muted tabular-nums" role="status">
             {t.searchResults(results.total, q)}
           </p>
-          <div className="mt-3 divide-y divide-line border-t border-line">
-            {results.data.map((post) => (
-              <PostRow key={post.id} post={post} href={`/posts/${post.slug}`} locale={locale} />
-            ))}
+          <div className="mt-3">
+            <PostList posts={results.data} locale={locale} template={templateOf(author.template)} />
           </div>
           <Pagination
             page={results.current_page}

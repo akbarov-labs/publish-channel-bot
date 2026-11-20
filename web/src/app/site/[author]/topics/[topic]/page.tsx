@@ -2,10 +2,11 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import Pagination, { pageFrom } from "@/components/Pagination";
-import { PostRow } from "@/components/PostRow";
+import PostList from "@/components/PostList";
 import { topicHref } from "@/components/TopicList";
 import { getAuthor, getAuthorTopics, getTopicPosts } from "@/lib/api";
 import { dict, localeOf } from "@/lib/i18n";
+import { templateOf } from "@/lib/templates";
 
 type Props = PageProps<"/site/[author]/topics/[topic]">;
 
@@ -58,11 +59,7 @@ export default async function TopicPage({ params, searchParams }: Props) {
         </h1>
         <p className="mt-2 text-sm text-muted tabular-nums">{t.topicPosts(posts.total)}</p>
       </header>
-      <div className="divide-y divide-line border-t border-line">
-        {posts.data.map((post) => (
-          <PostRow key={post.id} post={post} href={`/posts/${post.slug}`} locale={locale} />
-        ))}
-      </div>
+      <PostList posts={posts.data} locale={locale} template={templateOf(author.template)} />
       <Pagination page={posts.current_page} lastPage={posts.last_page} locale={locale} basePath={topicHref(topic)} />
     </main>
   );

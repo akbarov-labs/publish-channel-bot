@@ -15,7 +15,7 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
-#[Fillable(['name', 'username', 'email', 'password', 'bio', 'avatar', 'telegram_channel', 'webhook_url', 'webhook_secret', 'locale'])]
+#[Fillable(['name', 'username', 'email', 'password', 'bio', 'avatar', 'telegram_channel', 'webhook_url', 'webhook_secret', 'locale', 'template'])]
 #[Hidden(['password', 'remember_token', 'bot_token_hash', 'webhook_secret'])]
 class User extends Authenticatable implements FilamentUser
 {
@@ -40,9 +40,20 @@ class User extends Authenticatable implements FilamentUser
         'en' => 'English',
     ];
 
+    /**
+     * Designs of the reader site an author can pick, with what each is for.
+     * The reader site styles each (web/src/lib/templates.ts).
+     */
+    public const TEMPLATES = [
+        'classic' => ['Classic', 'Clean and calm: posts in a list with a small picture each, the newest given room at the top.'],
+        'magazine' => ['Magazine', 'Pictures first: posts as cards in a grid, for channels with photos and covers.'],
+        'notebook' => ['Notebook', 'Words first: serif type on warm paper, dates in the margin, no pictures in lists.'],
+    ];
+
     /** The database default too, so a model that was never reloaded has it. */
     protected $attributes = [
         'locale' => 'uz',
+        'template' => 'classic',
     ];
 
     /** Lowercase letters, digits and inner hyphens: a valid DNS label. */
