@@ -201,11 +201,9 @@ the footer. Its "Request a page" button opens the bot with `/start join`; the
 bot thanks them in their Telegram language and sends you a message with a
 link to their profile, so you can make their account and help them connect.
 Send the bot `/start` yourself once first, or Telegram won't let it write to
-you. Staging takes its own test bot's username. After editing `.env`:
-
-```bash
-sudo docker compose -f docker-compose.prod.yml up -d bot web
-```
+you. Staging takes its own test bot's username. After editing `.env`,
+recreate the containers as in [Changing `.env` on the server](#changing-env-on-the-server)
+(a bare `docker compose up` asks for the `latest` tag, which is never pushed).
 
 ### 10. Off-site backups
 
