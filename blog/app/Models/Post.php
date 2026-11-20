@@ -239,6 +239,21 @@ class Post extends Model
         return $this->source === self::SOURCE_TELEGRAM;
     }
 
+    /**
+     * The secret link that shows this post as readers will see it, published
+     * or not. Made on first use; a new one replaces it (the old stops working).
+     */
+    public function previewUrl(bool $renew = false): string
+    {
+        if ($renew || blank($this->preview_token)) {
+            $this->forceFill(['preview_token' => Str::random(40)])->saveQuietly();
+        }
+
+        $site = $this->user?->siteUrl() ?? rtrim((string) config('app.frontend_url'), '/');
+
+        return $site.'/preview/'.$this->preview_token;
+    }
+
     /** The post in its public channel, where readers comment; null for private channels. */
     public function telegramPostUrl(): ?string
     {

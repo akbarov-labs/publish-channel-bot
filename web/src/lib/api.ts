@@ -93,9 +93,9 @@ const API_BASE = process.env.BLOG_API_URL ?? "http://localhost:8001/api";
 // pages cheap without leaving new posts unpublished for long.
 const REVALIDATE_SECONDS = 60;
 
-async function get<T>(path: string): Promise<T | null> {
+async function get<T>(path: string, fresh = false): Promise<T | null> {
   const response = await fetch(`${API_BASE}/public${path}`, {
-    next: { revalidate: REVALIDATE_SECONDS },
+    ...(fresh ? { cache: "no-store" as const } : { next: { revalidate: REVALIDATE_SECONDS } }),
     headers: { Accept: "application/json" },
   });
 
@@ -159,6 +159,11 @@ export const getAuthorSitemap = cache(
   async (username: string) =>
     (await get<{ data: { slug: string; updated_at: string | null }[] }>(`/authors/${segment(username)}/sitemap`))
       ?.data ?? null,
+);
+
+/** A post through its secret preview link, never cached: the author is editing it. */
+export const getPreview = cache((username: string, token: string) =>
+  get<Post>(`/authors/${segment(username)}/preview/${segment(token)}`, true),
 );
 
 export const getPost = cache((username: string, slug: string) =>

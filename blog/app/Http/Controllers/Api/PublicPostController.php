@@ -162,6 +162,34 @@ class PublicPostController extends Controller
             ->firstOrFail()
             ->setRelation('user', $author);
 
+        return response()->json($this->postPayload($post, $author, withNeighbours: true));
+    }
+
+    /**
+     * A post through its secret preview link, whatever its status. The site
+     * marks the page as a preview and keeps it out of search engines.
+     */
+    public function preview(string $username, string $token): JsonResponse
+    {
+        abort_if(strlen($token) < 32, 404);
+
+        $author = $this->authorsWithStats()->where('username', $username)->firstOrFail();
+
+        $post = $author->posts()
+            ->where('preview_token', $token)
+            ->with(['media', 'tags'])
+            ->firstOrFail()
+            ->setRelation('user', $author);
+
+        return response()->json([
+            ...$this->postPayload($post, $author, withNeighbours: false),
+            'preview' => true,
+        ]);
+    }
+
+    /** @return array<string, mixed> */
+    private function postPayload(Post $post, User $author, bool $withNeighbours): array
+    {
         $neighbour = fn (string $operator, string $direction) => $author->posts()
             ->visible()
             ->where('published_at', $operator, $post->published_at)
@@ -169,26 +197,26 @@ class PublicPostController extends Controller
             ->with(['media', 'tags'])
             ->first();
 
-        $more = $author->posts()
+        $older = $withNeighbours ? $neighbour('<', 'desc') : null;
+        $newer = $withNeighbours ? $neighbour('>', 'asc') : null;
+
+        $more = $withNeighbours ? $author->posts()
             ->visible()
             ->whereKeyNot($post->id)
             ->latest('published_at')
             ->with('media')
             ->limit(3)
-            ->get();
-
-        $older = $neighbour('<', 'desc');
-        $newer = $neighbour('>', 'asc');
+            ->get() : collect();
 
         $series = $post->series_id ? $author->series()->find($post->series_id) : null;
 
-        return response()->json([
+        return [
             ...(new PublicPostResource($post, withBody: true))->resolve(),
             'series' => $series ? $this->seriesSummary($series) : null,
             'older' => $older ? (new PublicPostResource($older))->resolve() : null,
             'newer' => $newer ? (new PublicPostResource($newer))->resolve() : null,
             'more' => PublicPostResource::collection($more)->resolve(),
-        ]);
+        ];
     }
 
     /** @return array{title: string, slug: string, parts: list<array{title: string, slug: string}>} */
