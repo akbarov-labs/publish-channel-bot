@@ -15,4 +15,13 @@ class CreatePost extends CreateRecord
 
         return $data;
     }
+
+    /** The form's topics, plus any hashtags in the body. */
+    protected function afterCreate(): void
+    {
+        $this->record->syncTopics([
+            ...($this->data['topics'] ?? []),
+            ...\App\Models\Post::hashtagsIn($this->record->html),
+        ]);
+    }
 }

@@ -16,4 +16,13 @@ class EditPost extends EditRecord
             DeleteAction::make(),
         ];
     }
+
+    /** The form's topics, plus any hashtags in the body. */
+    protected function afterSave(): void
+    {
+        $this->record->syncTopics([
+            ...($this->data['topics'] ?? []),
+            ...\App\Models\Post::hashtagsIn($this->record->html),
+        ]);
+    }
 }

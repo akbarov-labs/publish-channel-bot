@@ -154,4 +154,9 @@ class User extends Authenticatable implements FilamentUser
 
         return 'https://t.me/'.ltrim($channel, '@');
     }
+
+    public function tags(): HasMany
+    {
+        return $this->hasMany(Tag::class);
+    }
 }

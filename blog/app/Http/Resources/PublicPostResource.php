@@ -42,6 +42,10 @@ class PublicPostResource extends JsonResource
                 'type' => $item->type,
                 'position' => $item->position,
             ])->values()),
+            'topics' => $this->whenLoaded('tags', fn () => $this->tags->map(fn ($tag) => [
+                'name' => $tag->name,
+                'slug' => $tag->slug,
+            ])->values()),
             'author' => new AuthorResource($this->whenLoaded('user')),
         ];
     }

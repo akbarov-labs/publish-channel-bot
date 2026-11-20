@@ -3,7 +3,8 @@ import Avatar from "@/components/Avatar";
 import Pagination, { pageFrom } from "@/components/Pagination";
 import { Pin } from "@/components/Icons";
 import { FeaturedPost, PostRow } from "@/components/PostRow";
-import { getAuthor, getAuthorPosts } from "@/lib/api";
+import TopicList from "@/components/TopicList";
+import { getAuthor, getAuthorPosts, getAuthorTopics } from "@/lib/api";
 import { dict, localeOf } from "@/lib/i18n";
 import { guessLang } from "@/lib/text";
 
@@ -15,7 +16,11 @@ function channelHandle(url: string): string {
 export default async function AuthorHome({ params, searchParams }: PageProps<"/site/[author]">) {
   const { author: username } = await params;
   const page = pageFrom((await searchParams).page);
-  const [author, posts] = await Promise.all([getAuthor(username), getAuthorPosts(username, page)]);
+  const [author, posts, topics] = await Promise.all([
+    getAuthor(username),
+    getAuthorPosts(username, page),
+    page === 1 ? getAuthorTopics(username) : Promise.resolve([]),
+  ]);
   if (!author || !posts) notFound();
   const locale = localeOf(author.locale);
   const t = dict(locale);
@@ -50,6 +55,9 @@ export default async function AuthorHome({ params, searchParams }: PageProps<"/s
               </>
             )}
           </p>
+          {topics.length > 0 && (
+            <TopicList topics={topics.slice(0, 12)} label={t.topics} className="mt-7 flex justify-center [&_ul]:justify-center" />
+          )}
         </section>
       )}
 

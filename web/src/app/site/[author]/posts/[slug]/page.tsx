@@ -7,6 +7,7 @@ import { ArrowLeft, ArrowRight, ExternalLink } from "@/components/Icons";
 import { PostRow } from "@/components/PostRow";
 import ShareButton from "@/components/ShareButton";
 import TelegramButton from "@/components/TelegramButton";
+import TopicList from "@/components/TopicList";
 import { getAuthor, getPost, type PostSummary } from "@/lib/api";
 import { authorUrl } from "@/lib/hosts";
 import { dict, formatDate, localeOf, type Dictionary } from "@/lib/i18n";
@@ -131,6 +132,12 @@ export default async function PostPage({ params }: Props) {
           // The body is written by the author, in the admin or in their channel,
           // so it is trusted content.
           <div className="prose-post mx-auto mt-8 max-w-[680px] px-4 sm:mt-10" dangerouslySetInnerHTML={{ __html: html }} />
+        )}
+
+        {post.topics && post.topics.length > 0 && (
+          <div lang={locale} className="mx-auto mt-10 max-w-[680px] px-4">
+            <TopicList topics={post.topics} label={t.topics} />
+          </div>
         )}
 
         {post.telegraph_url && (

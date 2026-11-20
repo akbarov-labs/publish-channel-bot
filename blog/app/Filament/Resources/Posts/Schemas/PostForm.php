@@ -9,6 +9,7 @@ use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\TagsInput;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Section;
@@ -40,6 +41,13 @@ class PostForm
                             ->rows(2)
                             ->maxLength(280)
                             ->helperText('Shown in listings and in the Telegram announcement.')
+                            ->columnSpanFull(),
+                        // Saved by the page (syncTopics), since topics are a relation.
+                        TagsInput::make('topics')
+                            ->placeholder('travel')
+                            ->helperText('Readers can open every post on a topic. Hashtags in the body (#travel) are added on their own.')
+                            ->afterStateHydrated(fn (TagsInput $component, ?Post $record) => $component->state($record?->tags->pluck('name')->all() ?? []))
+                            ->dehydrated(false)
                             ->columnSpanFull(),
                     ])
                     ->columns(2),

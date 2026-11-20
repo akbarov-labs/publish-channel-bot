@@ -17,7 +17,8 @@ export default function Pagination({
 
   const t = dict(locale);
 
-  const href = (target: number) => (target === 1 ? basePath : `${basePath}?page=${target}`);
+  const joiner = basePath.includes("?") ? "&" : "?";
+  const href = (target: number) => (target === 1 ? basePath : `${basePath}${joiner}page=${target}`);
   const button =
     "inline-flex h-10 items-center gap-2 rounded-full border border-line px-4 text-[0.9375rem] font-medium transition-colors duration-150 hover:border-ink";
 

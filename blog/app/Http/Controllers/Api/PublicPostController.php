@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\AuthorResource;
 use App\Http\Resources\PublicPostResource;
 use App\Models\Post;
+use App\Models\Tag;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
@@ -48,10 +49,18 @@ class PublicPostController extends Controller
     public function authorPosts(Request $request, string $username): JsonResponse
     {
         $author = User::where('username', $username)->firstOrFail();
+        $topic = $request->string('topic')->trim()->value();
+        $terms = $request->string('q')->trim()->limit(100, '')->value();
+
+        if ($topic !== '' && ! $author->tags()->where('slug', Tag::slugFor($topic))->exists()) {
+            abort(404);
+        }
 
         $posts = $author->posts()
             ->visible()
-            ->with('media')
+            ->with(['media', 'tags'])
+            ->when($topic !== '', fn (Builder $query) => $query->whereHas('tags', fn (Builder $tags) => $tags->where('slug', Tag::slugFor($topic))))
+            ->when($terms !== '', fn (Builder $query) => $query->search($terms))
             ->latest('published_at')
             ->paginate($this->perPage($request));
 
@@ -59,7 +68,7 @@ class PublicPostController extends Controller
         $response = $this->paginated($posts, withBody: $request->boolean('with_body'));
 
         // The front page shows the pinned post above the rest.
-        if ($posts->currentPage() === 1) {
+        if ($posts->currentPage() === 1 && $topic === '' && $terms === '') {
             $pinned = $author->posts()->visible()->whereNotNull('pinned_at')->with('media')->first();
             $response->setData([
                 ...$response->getData(true),
@@ -68,6 +77,27 @@ class PublicPostController extends Controller
         }
 
         return $response;
+    }
+
+    /** An author's topics that have posts, the busiest first. */
+    public function topics(string $username): JsonResponse
+    {
+        $author = User::where('username', $username)->firstOrFail();
+
+        $topics = $author->tags()
+            ->whereHas('posts', fn (Builder $query) => $query->visible())
+            ->withCount(['posts' => fn (Builder $query) => $query->visible()])
+            ->orderByDesc('posts_count')
+            ->orderBy('name')
+            ->get();
+
+        return response()->json([
+            'data' => $topics->map(fn (Tag $tag) => [
+                'name' => $tag->name,
+                'slug' => $tag->slug,
+                'posts_count' => $tag->posts_count,
+            ])->values(),
+        ]);
     }
 
     /** Every visible post's address and last change, for the author's sitemap. */
@@ -96,7 +126,7 @@ class PublicPostController extends Controller
         $post = $author->posts()
             ->visible()
             ->where('slug', $slug)
-            ->with('media')
+            ->with(['media', 'tags'])
             ->firstOrFail()
             ->setRelation('user', $author);
 
@@ -104,7 +134,7 @@ class PublicPostController extends Controller
             ->visible()
             ->where('published_at', $operator, $post->published_at)
             ->orderBy('published_at', $direction)
-            ->with('media')
+            ->with(['media', 'tags'])
             ->first();
 
         $more = $author->posts()

@@ -20,6 +20,12 @@ export type Author = {
   latest_post_at?: string | null;
 };
 
+export type Topic = {
+  name: string;
+  slug: string;
+  posts_count?: number;
+};
+
 export type PostSummary = {
   id: number;
   title: string;
@@ -33,6 +39,7 @@ export type PostSummary = {
   media: PostMedium[];
   author?: Author;
   pinned?: boolean;
+  topics?: Topic[];
 };
 
 export type Post = PostSummary & {
@@ -86,6 +93,23 @@ export const getAuthor = cache((username: string) => get<Author>(`/authors/${seg
 export const getAuthorPosts = cache(
   (username: string, page = 1) =>
     get<Paginated<PostSummary> & { pinned?: PostSummary | null }>(`/authors/${segment(username)}/posts?page=${page}`),
+);
+
+/** One topic's posts, newest first; null when the author has no such topic. */
+export const getTopicPosts = cache((username: string, topic: string, page = 1) =>
+  get<Paginated<PostSummary>>(
+    `/authors/${segment(username)}/posts?topic=${segment(topic)}&page=${page}`,
+  ),
+);
+
+/** Posts whose title or text has every word of the query. */
+export const searchPosts = cache((username: string, query: string, page = 1) =>
+  get<Paginated<PostSummary>>(`/authors/${segment(username)}/posts?q=${segment(query)}&page=${page}`),
+);
+
+/** An author's topics that have posts, the busiest first. */
+export const getAuthorTopics = cache(
+  async (username: string) => (await get<{ data: Topic[] }>(`/authors/${segment(username)}/topics`))?.data ?? [],
 );
 
 /** The latest posts with their bodies, for the author's RSS feed. */

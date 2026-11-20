@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
 
@@ -54,6 +55,14 @@ class Post extends Model
             // Published with no date means "now"; without one it would never show.
             if ($post->isPublished() && $post->published_at === null) {
                 $post->published_at = now();
+            }
+        });
+
+        // Hashtags in the body become topics. They are only ever added here, so
+        // a topic set in the admin survives an edit that does not mention it.
+        static::saved(function (Post $post) {
+            if ($post->user_id !== null && ($post->wasRecentlyCreated || $post->wasChanged('html'))) {
+                $post->attachTopics(static::hashtagsIn($post->html));
             }
         });
 
@@ -107,14 +116,89 @@ class Post extends Model
         return $slug;
     }
 
+    /**
+     * The hashtags in a body, in order of first appearance: "#travel" and
+     * "#Oʻzbekiston" count, "C#", "#1" and page anchors do not.
+     *
+     * @return list<string>
+     */
+    public static function hashtagsIn(?string $html): array
+    {
+        $text = html_entity_decode(strip_tags((string) preg_replace('~<[^>]+>~', ' $0 ', (string) $html)), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        preg_match_all('/(?<![\p{L}\p{N}_#&\/])#([\p{L}\p{M}\p{N}_ʻʼ]{2,64})/u', $text, $matches);
+
+        $names = [];
+        foreach ($matches[1] as $name) {
+            if (preg_match('/^\d+$/', $name)) {
+                continue;
+            }
+            $names[Tag::slugFor($name)] ??= $name;
+        }
+
+        return array_values($names);
+    }
+
+    /** @param  iterable<string>  $names */
+    public function attachTopics(iterable $names): void
+    {
+        $this->tags()->syncWithoutDetaching($this->topicIds($names));
+    }
+
+    /** Sets the topics to exactly these (the admin's field). */
+    public function syncTopics(iterable $names): void
+    {
+        $this->tags()->sync($this->topicIds($names));
+    }
+
+    /** @return list<int> */
+    private function topicIds(iterable $names): array
+    {
+        $ids = [];
+        foreach ($names as $name) {
+            $slug = Tag::slugFor((string) $name);
+            if ($slug === '' || mb_strlen($slug) > 64) {
+                continue;
+            }
+            $ids[] = Tag::firstOrCreate(
+                ['user_id' => $this->user_id, 'slug' => $slug],
+                ['name' => ltrim(trim((string) $name), '#')],
+            )->id;
+        }
+
+        return array_values(array_unique($ids));
+    }
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
+    public function tags(): BelongsToMany
+    {
+        return $this->belongsToMany(Tag::class)->orderBy('name');
+    }
+
     public function media(): HasMany
     {
         return $this->hasMany(PostMedium::class)->orderBy('position');
+    }
+
+    /**
+     * Title or text contains the words, case-insensitively. Postgres lowers
+     * any script; SQLite (tests) only ASCII.
+     */
+    public function scopeSearch(Builder $query, string $terms): void
+    {
+        foreach (preg_split('/\s+/u', trim($terms)) ?: [] as $word) {
+            if ($word === '') {
+                continue;
+            }
+            // "!" escapes the wildcards; SQLite has no default escape character.
+            $like = '%'.str_replace(['!', '%', '_'], ['!!', '!%', '!_'], mb_strtolower($word)).'%';
+            $query->where(fn (Builder $match) => $match
+                ->whereRaw("lower(title) like ? escape '!'", [$like])
+                ->orWhereRaw("lower(html) like ? escape '!'", [$like]));
+        }
     }
 
     /**
