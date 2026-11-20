@@ -27,7 +27,7 @@ class Post extends Model
     protected $fillable = [
         'user_id', 'title', 'slug', 'html', 'excerpt', 'post_type', 'status',
         'source', 'external_id', 'telegraph_url', 'cover_image', 'published_at',
-        'pinned_at', 'series_id', 'series_position',
+        'pinned_at', 'series_id', 'series_position', 'telegram_message_id',
     ];
 
     protected function casts(): array
@@ -37,6 +37,7 @@ class Post extends Model
             'telegram_notified_at' => 'datetime',
             'pinned_at' => 'datetime',
             'announce_pending' => 'boolean',
+            'reactions' => 'array',
         ];
     }
 
@@ -233,6 +234,30 @@ class Post extends Model
     public function cameFromTelegram(): bool
     {
         return $this->source === self::SOURCE_TELEGRAM;
+    }
+
+    /** The post in its public channel, where readers comment; null for private channels. */
+    public function telegramPostUrl(): ?string
+    {
+        $channel = $this->user?->channelUsername();
+
+        return $channel && $this->telegram_message_id ? "https://t.me/{$channel}/{$this->telegram_message_id}" : null;
+    }
+
+    /** One more view today, for the post's total and the admin's daily stats. */
+    public function recordView(): void
+    {
+        $this->newQuery()->whereKey($this->getKey())->increment('views_count');
+
+        $day = now()->toDateString();
+        $updated = \Illuminate\Support\Facades\DB::table('post_views')
+            ->where('post_id', $this->getKey())
+            ->where('day', $day)
+            ->increment('views');
+
+        if ($updated === 0) {
+            \Illuminate\Support\Facades\DB::table('post_views')->insertOrIgnore(['post_id' => $this->getKey(), 'day' => $day, 'views' => 1]);
+        }
     }
 
     public function url(): string

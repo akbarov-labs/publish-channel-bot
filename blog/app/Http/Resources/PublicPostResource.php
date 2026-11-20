@@ -35,6 +35,12 @@ class PublicPostResource extends JsonResource
             'telegraph_url' => $this->telegraph_url,
             'published_at' => $this->published_at?->toAtomString(),
             'pinned' => $this->pinned_at !== null,
+            'views' => (int) $this->views_count,
+            'reactions' => $this->reactions ?? [],
+            // "channel/123": the post in its channel, for comments and links.
+            'telegram_post' => ($channel = $this->user?->channelUsername()) && $this->telegram_message_id
+                ? "{$channel}/{$this->telegram_message_id}"
+                : null,
             'url' => $this->url(),
             'media' => $this->whenLoaded('media', fn () => $this->media->map(fn ($item) => [
                 'id' => $item->id,

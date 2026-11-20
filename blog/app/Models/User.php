@@ -155,6 +155,24 @@ class User extends Authenticatable implements FilamentUser
         return 'https://t.me/'.ltrim($channel, '@');
     }
 
+    /**
+     * The public channel's @username without the @, when there is one. A
+     * private invite link (t.me/+...) has none, and neither do comments.
+     */
+    public function channelUsername(): ?string
+    {
+        $channel = trim((string) $this->telegram_channel);
+        $name = preg_replace('~^(?:https?://)?(?:t\.me|telegram\.me)/~i', '', ltrim($channel, '@'));
+        $name = explode('/', explode('?', (string) $name)[0])[0];
+
+        // t.me's own paths (invite links, sticker sets) are not channels.
+        $reserved = ['joinchat', 'addstickers', 'addemoji', 'share', 'proxy', 'socks', 'setlanguage', 'login'];
+
+        return preg_match('/^[A-Za-z][A-Za-z0-9_]{3,31}$/', $name) && ! in_array(strtolower($name), $reserved, true)
+            ? $name
+            : null;
+    }
+
     public function tags(): HasMany
     {
         return $this->hasMany(Tag::class);

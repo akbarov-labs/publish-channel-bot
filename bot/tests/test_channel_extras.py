@@ -30,3 +30,54 @@ async def test_a_pin_of_an_unknown_message_is_ignored(session, site):
 
     assert await sync.channel_pin_to_site(session, channel, 12345) is False
     assert site.created == []
+
+
+async def test_reaction_counts_reach_the_site(session, site):
+    channel = await make_channel(session)
+    session.add(PostLink(channel_id=channel.id, tg_message_id=5, site_post_id="p-3", origin="telegram"))
+    await session.flush()
+
+    counts = [{"emoji": "🔥", "count": 4}]
+    assert await sync.channel_reactions_to_site(session, channel, 5, counts) is True
+    assert site.created == [{"reactions": "p-3", "counts": counts}]
+
+
+def test_reaction_counts_keep_emoji_and_stars_and_drop_custom_emoji():
+    from datetime import datetime
+
+    from aiogram.types import (
+        Chat,
+        MessageReactionCountUpdated,
+        ReactionCount,
+        ReactionTypeCustomEmoji,
+        ReactionTypeEmoji,
+        ReactionTypePaid,
+    )
+
+    from app.bot.handlers.channel import reaction_counts
+
+    event = MessageReactionCountUpdated(
+        chat=Chat(id=-1001, type="channel"),
+        message_id=5,
+        date=datetime.now(),
+        reactions=[
+            ReactionCount(type=ReactionTypeEmoji(emoji="👍"), total_count=3),
+            ReactionCount(type=ReactionTypeCustomEmoji(custom_emoji_id="123"), total_count=2),
+            ReactionCount(type=ReactionTypePaid(), total_count=7),
+        ],
+    )
+
+    assert reaction_counts(event) == [{"emoji": "👍", "count": 3}, {"emoji": "⭐", "count": 7}]
+
+
+async def test_an_announced_admin_post_tells_the_site_its_message(session, site):
+    from tests.factories import StubBot
+
+    channel = await make_channel(session)
+    bot = StubBot()
+
+    link = await sync.site_post_to_channel(
+        session, bot, channel, {"id": "p-1", "title": "Hi", "html": "<p>x</p>", "url": "https://blog.test/p/1"}
+    )
+
+    assert {"channel_message": "p-1", "message_id": link.tg_message_id} in site.created

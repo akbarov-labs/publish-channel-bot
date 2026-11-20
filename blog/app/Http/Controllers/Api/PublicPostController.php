@@ -80,6 +80,20 @@ class PublicPostController extends Controller
         return $response;
     }
 
+    /**
+     * A reader opened the post. Only the reader site calls this (Caddy keeps
+     * /api/public from the outside), passing the reader's address on.
+     */
+    public function view(string $username, string $slug): JsonResponse
+    {
+        $author = User::where('username', $username)->firstOrFail();
+        $post = $author->posts()->visible()->where('slug', $slug)->firstOrFail();
+
+        $post->recordView();
+
+        return response()->json(['views' => (int) $post->fresh()->views_count]);
+    }
+
     /** A series and its visible parts, in reading order. */
     public function series(string $username, string $slug): JsonResponse
     {

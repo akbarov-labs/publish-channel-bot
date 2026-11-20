@@ -58,6 +58,7 @@ class BotPostController extends Controller
             'telegraph_url' => $data['telegraph_url'] ?? null,
             'cover_image' => collect($media)->firstWhere('type', 'photo')['url'] ?? null,
             'published_at' => $data['published_at'] ?? now(),
+            'telegram_message_id' => preg_match('/^tg:-?\d+:(\d+)$/', $data['external_id'], $match) ? (int) $match[1] : null,
         ]);
 
         foreach (array_values($media) as $position => $item) {
@@ -98,5 +99,39 @@ class BotPostController extends Controller
         $post->update(['pinned_at' => now()]);
 
         return response()->json(['id' => (string) $post->id, 'pinned' => true]);
+    }
+
+    /** Where the bot announced a post written in the admin, for comments and links. */
+    public function channelMessage(Request $request, Post $post): JsonResponse
+    {
+        abort_unless($post->user_id === $request->user()->id, 404);
+
+        $data = $request->validate(['message_id' => ['required', 'integer', 'min:1']]);
+        $post->forceFill(['telegram_message_id' => $data['message_id']])->saveQuietly();
+
+        return response()->json(['id' => (string) $post->id]);
+    }
+
+    /** The channel's reaction counts for this post, replacing the last ones. */
+    public function reactions(Request $request, Post $post): JsonResponse
+    {
+        abort_unless($post->user_id === $request->user()->id, 404);
+
+        $data = $request->validate([
+            'reactions' => ['present', 'array', 'max:20'],
+            'reactions.*.emoji' => ['required', 'string', 'max:16'],
+            'reactions.*.count' => ['required', 'integer', 'min:0'],
+        ]);
+
+        $reactions = collect($data['reactions'])
+            ->filter(fn (array $reaction) => $reaction['count'] > 0)
+            ->sortByDesc('count')
+            ->map(fn (array $reaction) => ['emoji' => $reaction['emoji'], 'count' => (int) $reaction['count']])
+            ->values()
+            ->all();
+
+        $post->forceFill(['reactions' => $reactions])->saveQuietly();
+
+        return response()->json(['id' => (string) $post->id, 'reactions' => $reactions]);
     }
 }

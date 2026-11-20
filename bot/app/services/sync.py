@@ -267,6 +267,20 @@ async def channel_pin_to_site(session: AsyncSession, channel: Channel, pinned_me
     return True
 
 
+async def channel_reactions_to_site(
+    session: AsyncSession, channel: Channel, message_id: int, reactions: list[dict[str, Any]]
+) -> bool:
+    """The reaction counts on a channel post, mirrored onto its page."""
+    if not channel.active:
+        return False
+    link = await link_for_message(session, channel.id, message_id)
+    if not link or not link.site_post_id:
+        return False
+    site = await session.get(Site, channel.site_id)
+    await site_client_for(site).set_reactions(link.site_post_id, reactions)
+    return True
+
+
 async def site_post_to_channel(
     session: AsyncSession,
     bot: Bot,
@@ -306,6 +320,14 @@ async def site_post_to_channel(
         )
 
     recently_sent.add(channel.telegram_chat_id, sent.message_id)
+
+    # The site links to the post in the channel and shows its comments there.
+    # Best effort: the announcement is out either way.
+    try:
+        await site_client_for(effective_site).set_channel_message(site_post_id, sent.message_id)
+    except SiteError as exc:
+        log.warning("could not tell the site where post %s was announced: %s", site_post_id, exc)
+
     link = PostLink(
         channel_id=channel.id,
         tg_message_id=sent.message_id,
@@ -323,6 +345,7 @@ __all__ = [
     "SiteError",
     "channel_edit_to_site",
     "channel_pin_to_site",
+    "channel_reactions_to_site",
     "channel_post_to_site",
     "link_for_message",
     "link_for_post",

@@ -81,6 +81,12 @@ class StubSiteClient:
     async def pin_post(self, post_id: str) -> None:
         self.created.append({"pin": post_id})
 
+    async def set_channel_message(self, post_id: str, message_id: int) -> None:
+        self.created.append({"channel_message": post_id, "message_id": message_id})
+
+    async def set_reactions(self, post_id: str, reactions: list[dict[str, Any]]) -> None:
+        self.created.append({"reactions": post_id, "counts": reactions})
+
 
 @dataclass
 class StubOrigin:

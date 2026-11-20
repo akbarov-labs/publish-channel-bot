@@ -26,6 +26,8 @@ export type Topic = {
   posts_count?: number;
 };
 
+export type Reaction = { emoji: string; count: number };
+
 export type PostSummary = {
   id: number;
   title: string;
@@ -40,6 +42,10 @@ export type PostSummary = {
   author?: Author;
   pinned?: boolean;
   topics?: Topic[];
+  views?: number;
+  reactions?: Reaction[];
+  /** "channel/123": the post in its public channel, for comments. */
+  telegram_post?: string | null;
 };
 
 export type SeriesSummary = {

@@ -7,7 +7,10 @@ import { ArrowLeft, ArrowRight, ExternalLink } from "@/components/Icons";
 import { PostRow } from "@/components/PostRow";
 import ShareButton from "@/components/ShareButton";
 import TelegramButton from "@/components/TelegramButton";
+import Comments from "@/components/Comments";
 import Contents from "@/components/Contents";
+import Reactions from "@/components/Reactions";
+import ViewCounter from "@/components/ViewCounter";
 import SeriesBox from "@/components/SeriesBox";
 import TopicList from "@/components/TopicList";
 import { withFootnotes, withHeadingAnchors } from "@/lib/article";
@@ -88,6 +91,7 @@ export default async function PostPage({ params }: Props) {
 
   return (
     <main>
+      <ViewCounter slug={post.slug} />
       <article lang={lang}>
         <header className="mx-auto max-w-[680px] px-4 pt-10 sm:pt-16">
           <h1 className="title text-[2rem] leading-[1.14] sm:text-[2.75rem]">{post.title}</h1>
@@ -108,6 +112,12 @@ export default async function PostPage({ params }: Props) {
                     : t.minutesRead(minutes)}
                 <span aria-hidden="true"> · </span>
                 <time dateTime={post.published_at ?? undefined}>{formatDate(post.published_at, locale)}</time>
+                {post.views ? (
+                  <>
+                    <span aria-hidden="true"> · </span>
+                    {t.views(post.views)}
+                  </>
+                ) : null}
               </p>
             </div>
             <ShareButton url={url} title={post.title} locale={locale} />
@@ -141,6 +151,12 @@ export default async function PostPage({ params }: Props) {
           // The body is written by the author, in the admin or in their channel,
           // so it is trusted content.
           <div className="prose-post mx-auto mt-8 max-w-[680px] px-4 sm:mt-10" dangerouslySetInnerHTML={{ __html: html }} />
+        )}
+
+        {post.reactions && post.reactions.length > 0 && (
+          <div lang={locale} className="mx-auto mt-10 max-w-[680px] px-4">
+            <Reactions reactions={post.reactions} label={t.reactions} />
+          </div>
         )}
 
         {post.topics && post.topics.length > 0 && (
@@ -193,6 +209,8 @@ export default async function PostPage({ params }: Props) {
             </div>
           </div>
         </section>
+
+        {post.telegram_post && <Comments post={post.telegram_post} locale={locale} />}
 
         {(post.older || post.newer) && (
           <nav aria-label={t.morePosts} className="mt-12 grid border-y border-line sm:grid-cols-2 sm:gap-8">

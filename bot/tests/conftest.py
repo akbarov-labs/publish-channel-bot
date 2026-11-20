@@ -31,3 +31,14 @@ async def session():
 
     async with SessionLocal() as db:
         yield db
+
+
+@pytest_asyncio.fixture(autouse=True)
+async def offline_site(monkeypatch):
+    """No test reaches a real blog; tests that inspect calls patch their own."""
+    from app.services import sync
+    from tests.factories import StubSiteClient
+
+    client = StubSiteClient()
+    monkeypatch.setattr(sync, "site_client_for", lambda _site: client)
+    return client

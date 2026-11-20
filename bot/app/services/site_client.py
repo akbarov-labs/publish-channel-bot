@@ -89,6 +89,14 @@ class SiteClient:
         """The channel pinned this post's message; the site pins it too."""
         await self._request("POST", f"/posts/{post_id}/pin")
 
+    async def set_channel_message(self, post_id: str, message_id: int) -> None:
+        """Where an admin post was announced, so the site can link to it."""
+        await self._request("PUT", f"/posts/{post_id}/channel-message", json={"message_id": message_id})
+
+    async def set_reactions(self, post_id: str, reactions: list[dict[str, Any]]) -> None:
+        """The channel's reaction counts for a post, replacing the last ones."""
+        await self._request("PUT", f"/posts/{post_id}/reactions", json={"reactions": reactions})
+
     async def upload_media(self, filename: str, content: bytes, content_type: str) -> str:
         data = await self._request(
             "POST", "/media", files={"file": (filename, content, content_type)}
