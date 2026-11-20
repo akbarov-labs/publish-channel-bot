@@ -108,6 +108,10 @@ class StubMessage:
     video: Any = None
     document: Any = None
     animation: Any = None
+    audio: Any = None
+    voice: Any = None
+    poll: Any = None
+    pinned_message: Any = None
     date: Any = None
     media_group_id: str | None = None
     forward_origin: Any = None

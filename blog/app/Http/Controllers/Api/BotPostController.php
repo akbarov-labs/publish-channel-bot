@@ -29,12 +29,21 @@ class BotPostController extends Controller
             'external_id' => ['required', 'string', 'max:255'],
             'title' => ['required', 'string', 'max:255'],
             'html' => ['nullable', 'string'],
-            'post_type' => ['nullable', 'string', 'in:article,gallery,video'],
+            'post_type' => ['nullable', 'string', 'in:article,gallery,video,audio,poll'],
             'telegraph_url' => ['nullable', 'url', 'max:255'],
             'published_at' => ['nullable', 'date'],
             'media' => ['array'],
             'media.*.url' => ['required', 'url'],
-            'media.*.type' => ['required', 'string', 'in:photo,video,document'],
+            'media.*.type' => ['required', 'string', 'in:photo,video,document,audio'],
+            'poll' => ['nullable', 'array'],
+            'poll.question' => ['required_with:poll', 'string', 'max:300'],
+            'poll.options' => ['required_with:poll', 'array', 'min:1', 'max:12'],
+            'poll.options.*.text' => ['required', 'string', 'max:200'],
+            'poll.options.*.votes' => ['nullable', 'integer', 'min:0'],
+            'poll.total_votes' => ['nullable', 'integer', 'min:0'],
+            'poll.closed' => ['nullable', 'boolean'],
+            'poll.multiple' => ['nullable', 'boolean'],
+            'poll.quiz' => ['nullable', 'boolean'],
         ]);
 
         $author = $request->user();
@@ -58,6 +67,17 @@ class BotPostController extends Controller
             'telegraph_url' => $data['telegraph_url'] ?? null,
             'cover_image' => collect($media)->firstWhere('type', 'photo')['url'] ?? null,
             'published_at' => $data['published_at'] ?? now(),
+            'poll' => isset($data['poll']) ? [
+                'question' => $data['poll']['question'],
+                'options' => array_map(fn (array $option) => [
+                    'text' => $option['text'],
+                    'votes' => (int) ($option['votes'] ?? 0),
+                ], $data['poll']['options']),
+                'total_votes' => (int) ($data['poll']['total_votes'] ?? 0),
+                'closed' => (bool) ($data['poll']['closed'] ?? false),
+                'multiple' => (bool) ($data['poll']['multiple'] ?? false),
+                'quiz' => (bool) ($data['poll']['quiz'] ?? false),
+            ] : null,
             'telegram_message_id' => preg_match('/^tg:-?\d+:(\d+)$/', $data['external_id'], $match) ? (int) $match[1] : null,
         ]);
 

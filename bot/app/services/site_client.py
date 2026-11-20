@@ -64,6 +64,7 @@ class SiteClient:
         published_at: str | None = None,
         post_type: str = "article",
         telegraph_url: str | None = None,
+        poll: dict[str, Any] | None = None,
     ) -> CreatedPost:
         payload = {
             "source": "telegram",
@@ -75,6 +76,8 @@ class SiteClient:
             "post_type": post_type,
             "telegraph_url": telegraph_url,
         }
+        if poll is not None:
+            payload["poll"] = poll
         data = await self._request("POST", "/posts", json=payload)
         if "id" not in data or "url" not in data:
             raise SiteError("POST /posts must return {\"id\": ..., \"url\": ...}")

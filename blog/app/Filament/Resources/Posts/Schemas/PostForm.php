@@ -52,8 +52,8 @@ class PostForm
                     ])
                     ->columns(2),
 
-                Section::make('Gallery')
-                    ->description('Images shown as a carousel. Albums posted in the channel land here in order.')
+                Section::make('Media')
+                    ->description('A gallery shows photos as a carousel; an audio post plays its tracks; files are listed for download. Albums posted in the channel land here in order.')
                     ->schema([
                         Repeater::make('media')
                             ->relationship()
@@ -61,7 +61,7 @@ class PostForm
                             ->schema([
                                 TextInput::make('url')->required()->url()->columnSpan(2),
                                 Select::make('type')
-                                    ->options(['photo' => 'Photo', 'video' => 'Video', 'document' => 'Document'])
+                                    ->options(['photo' => 'Photo', 'video' => 'Video', 'audio' => 'Audio', 'document' => 'File'])
                                     ->default('photo')
                                     ->required(),
                             ])
@@ -71,17 +71,20 @@ class PostForm
                             ->collapsible()
                             ->itemLabel(fn (array $state): ?string => $state['url'] ?? null),
                     ])
-                    ->visible(fn (callable $get) => $get('post_type') === Post::TYPE_GALLERY)
+                    ->visible(fn (callable $get) => in_array($get('post_type'), [Post::TYPE_GALLERY, Post::TYPE_AUDIO], true))
                     ->collapsed(),
 
                 Section::make('Publishing')
                     ->schema([
                         Select::make('post_type')
                             ->label('Type')
-                            ->options([
+                            ->options(fn (?Post $record): array => [
                                 Post::TYPE_ARTICLE => 'Article',
                                 Post::TYPE_GALLERY => 'Gallery (carousel)',
                                 Post::TYPE_VIDEO => 'Video',
+                                Post::TYPE_AUDIO => 'Audio',
+                                // Polls come from the channel; they are not made here.
+                                ...($record?->post_type === Post::TYPE_POLL ? [Post::TYPE_POLL => 'Poll'] : []),
                             ])
                             ->default(Post::TYPE_ARTICLE)
                             ->live()

@@ -20,6 +20,8 @@ class Post extends Model
     public const TYPE_ARTICLE = 'article';
     public const TYPE_GALLERY = 'gallery';
     public const TYPE_VIDEO = 'video';
+    public const TYPE_AUDIO = 'audio';
+    public const TYPE_POLL = 'poll';
 
     public const SOURCE_WEB = 'web';
     public const SOURCE_TELEGRAM = 'telegram';
@@ -27,7 +29,7 @@ class Post extends Model
     protected $fillable = [
         'user_id', 'title', 'slug', 'html', 'excerpt', 'post_type', 'status',
         'source', 'external_id', 'telegraph_url', 'cover_image', 'published_at',
-        'pinned_at', 'series_id', 'series_position', 'telegram_message_id',
+        'pinned_at', 'series_id', 'series_position', 'telegram_message_id', 'poll',
     ];
 
     protected function casts(): array
@@ -38,6 +40,7 @@ class Post extends Model
             'pinned_at' => 'datetime',
             'announce_pending' => 'boolean',
             'reactions' => 'array',
+            'poll' => 'array',
         ];
     }
 

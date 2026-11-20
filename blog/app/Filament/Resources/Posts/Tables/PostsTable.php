@@ -33,6 +33,8 @@ class PostsTable
                         'gray' => Post::TYPE_ARTICLE,
                         'info' => Post::TYPE_GALLERY,
                         'warning' => Post::TYPE_VIDEO,
+                        'success' => Post::TYPE_AUDIO,
+                        'primary' => Post::TYPE_POLL,
                     ]),
                 TextColumn::make('status')
                     ->badge()
@@ -72,6 +74,8 @@ class PostsTable
                         Post::TYPE_ARTICLE => 'Article',
                         Post::TYPE_GALLERY => 'Gallery',
                         Post::TYPE_VIDEO => 'Video',
+                        Post::TYPE_AUDIO => 'Audio',
+                        Post::TYPE_POLL => 'Poll',
                     ]),
                 SelectFilter::make('source')
                     ->options([Post::SOURCE_WEB => 'Written here', Post::SOURCE_TELEGRAM => 'From Telegram']),

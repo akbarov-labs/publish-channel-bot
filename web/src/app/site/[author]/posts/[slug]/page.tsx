@@ -7,7 +7,9 @@ import { ArrowLeft, ArrowRight, ExternalLink } from "@/components/Icons";
 import { PostRow } from "@/components/PostRow";
 import ShareButton from "@/components/ShareButton";
 import TelegramButton from "@/components/TelegramButton";
+import Attachments from "@/components/Attachments";
 import Comments from "@/components/Comments";
+import PollView from "@/components/PollView";
 import Contents from "@/components/Contents";
 import Reactions from "@/components/Reactions";
 import ViewCounter from "@/components/ViewCounter";
@@ -81,7 +83,7 @@ export default async function PostPage({ params }: Props) {
     withFootnotes(post.html ? withoutLeadingTitle(post.html, post.title) : "", t.backToText),
   );
   const lang = guessLang(`${post.title} ${stripTags(html).slice(0, 400)}`);
-  const visual = post.media.filter((item) => item.type !== "document");
+  const visual = post.media.filter((item) => item.type === "photo" || item.type === "video");
   const video = post.post_type === "video" ? visual.find((item) => item.type === "video") : undefined;
   const isGallery = post.post_type === "gallery" && visual.length > 0;
   const minutes = readingMinutes(html);
@@ -109,7 +111,11 @@ export default async function PostPage({ params }: Props) {
                   ? t.photos(visual.length)
                   : post.post_type === "video"
                     ? t.video
-                    : t.minutesRead(minutes)}
+                    : post.post_type === "audio"
+                      ? t.audio
+                      : post.post_type === "poll"
+                        ? t.poll
+                        : t.minutesRead(minutes)}
                 <span aria-hidden="true"> · </span>
                 <time dateTime={post.published_at ?? undefined}>{formatDate(post.published_at, locale)}</time>
                 {post.views ? (
@@ -143,6 +149,18 @@ export default async function PostPage({ params }: Props) {
           </figure>
         )}
 
+        {post.poll && (
+          <div lang={locale} className="mx-auto mt-8 max-w-[680px] px-4 sm:mt-10">
+            <PollView poll={post.poll} telegramPost={post.telegram_post} t={t} />
+          </div>
+        )}
+
+        {post.post_type === "audio" && (
+          <div lang={locale} className="mx-auto mt-8 max-w-[680px] px-4 sm:mt-10">
+            <Attachments media={post.media} t={t} />
+          </div>
+        )}
+
         {post.series && <SeriesBox series={post.series} current={post.slug} t={t} />}
 
         <Contents headings={headings} label={t.contents} />
@@ -151,6 +169,12 @@ export default async function PostPage({ params }: Props) {
           // The body is written by the author, in the admin or in their channel,
           // so it is trusted content.
           <div className="prose-post mx-auto mt-8 max-w-[680px] px-4 sm:mt-10" dangerouslySetInnerHTML={{ __html: html }} />
+        )}
+
+        {post.post_type !== "audio" && post.media.some((item) => item.type === "audio" || item.type === "document") && (
+          <div lang={locale} className="mx-auto mt-10 max-w-[680px] px-4">
+            <Attachments media={post.media} t={t} />
+          </div>
         )}
 
         {post.reactions && post.reactions.length > 0 && (

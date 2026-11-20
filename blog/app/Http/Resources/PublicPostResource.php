@@ -37,6 +37,7 @@ class PublicPostResource extends JsonResource
             'pinned' => $this->pinned_at !== null,
             'views' => (int) $this->views_count,
             'reactions' => $this->reactions ?? [],
+            'poll' => $this->poll,
             // "channel/123": the post in its channel, for comments and links.
             'telegram_post' => ($channel = $this->user?->channelUsername()) && $this->telegram_message_id
                 ? "{$channel}/{$this->telegram_message_id}"

@@ -3,7 +3,7 @@ import { cache } from "react";
 export type PostMedium = {
   id: number;
   url: string;
-  type: "photo" | "video" | "document";
+  type: "photo" | "video" | "document" | "audio";
   position: number;
 };
 
@@ -28,12 +28,21 @@ export type Topic = {
 
 export type Reaction = { emoji: string; count: number };
 
+export type Poll = {
+  question: string;
+  options: { text: string; votes: number }[];
+  total_votes: number;
+  closed: boolean;
+  multiple: boolean;
+  quiz: boolean;
+};
+
 export type PostSummary = {
   id: number;
   title: string;
   slug: string;
   excerpt: string | null;
-  post_type: "article" | "gallery" | "video";
+  post_type: "article" | "gallery" | "video" | "audio" | "poll";
   cover_image: string | null;
   telegraph_url: string | null;
   published_at: string | null;
@@ -46,6 +55,7 @@ export type PostSummary = {
   reactions?: Reaction[];
   /** "channel/123": the post in its public channel, for comments. */
   telegram_post?: string | null;
+  poll?: Poll | null;
 };
 
 export type SeriesSummary = {

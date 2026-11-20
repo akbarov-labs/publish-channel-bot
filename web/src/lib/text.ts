@@ -61,6 +61,8 @@ export function photoCount(post: Pick<PostSummary, "media">): number {
 export function typeLabel(post: Pick<PostSummary, "post_type" | "media">, t: Dictionary): string | null {
   if (post.post_type === "gallery") return t.photos(photoCount(post));
   if (post.post_type === "video") return t.video;
+  if (post.post_type === "audio") return t.audio;
+  if (post.post_type === "poll") return t.poll;
   return null;
 }
 
