@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\BotConnectController;
 use App\Http\Controllers\Api\BotMediaController;
 use App\Http\Controllers\Api\BotPostController;
 use App\Http\Controllers\Api\PageRequestController;
@@ -14,12 +15,14 @@ Route::prefix('telegram')->middleware('bot.auth')->group(function () {
     Route::post('/posts', [BotPostController::class, 'store']);
     Route::patch('/posts/{post}', [BotPostController::class, 'update']);
     Route::post('/media', [BotMediaController::class, 'store']);
+    Route::put('/webhook', [BotConnectController::class, 'webhook']);
 });
 
 // Calls the bot makes for the platform rather than for one author, with
 // BOT_INTERNAL_SECRET. Caddy refuses /api/internal/* from outside as well.
 Route::prefix('internal')->middleware('internal.auth')->group(function () {
     Route::post('/page-requests', [PageRequestController::class, 'store']);
+    Route::post('/connect', [BotConnectController::class, 'connect']);
 });
 
 // Asked by the edge Caddy before it gets a certificate for an author's host.

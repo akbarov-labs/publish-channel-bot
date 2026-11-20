@@ -92,6 +92,20 @@ class PostLink(Base):
     )
 
 
+class WaitingChannel(Base):
+    """A channel the bot was made admin of before its owner connected a blog.
+
+    Bound to the blog, and switched on, as soon as that owner connects.
+    """
+
+    __tablename__ = "waiting_channels"
+
+    telegram_chat_id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    telegram_user_id: Mapped[int] = mapped_column(BigInteger, index=True)
+    title: Mapped[str | None] = mapped_column(String(255))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
 class PendingConnection(Base):
     """Scratch state for the /connect conversation in DM."""
 

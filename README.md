@@ -97,16 +97,21 @@ docker compose run --rm bot python -c \
 
 ## Connecting an author
 
-1. In the admin, open **Profile** and press **Generate bot token**. The token is
-   shown once; only its hash is stored.
-2. DM the bot `/connect`. Send the blog's API base URL —
-   `https://yourblog.com/api/telegram`, the same for every author — then the token.
-3. The bot verifies with `GET /ping` and replies with a webhook URL and signing
-   secret. Paste them into the **Telegram bot** section of the same Profile page.
-4. Add the bot to the channel as an admin with *Post messages*.
-5. Send `/activate` in the channel.
-6. `/import` to turn the posts already in the channel into blog posts.
-7. Optional: `/telegraph` in the DM to turn on Instant View.
+1. DM the bot `/connect`.
+   - An author made from **Page requests** is connected straight away: the
+     bot asks the blog over the stack's network (`POST /api/internal/connect`,
+     needs `BOT_INTERNAL_SECRET`), which issues their bot token and stores the
+     bot's webhook.
+   - Anyone else is sent to their admin **Profile** to press **Generate bot
+     token** and paste it. The bot then sets its webhook on the blog itself
+     (`PUT /api/telegram/webhook`).
+   - Without `BOT_INTERNAL_SECRET`, the bot asks for the API base URL
+     (`https://admin.DOMAIN/api/telegram`) and then the token, as before.
+2. Add the bot to the channel as an admin with *Post messages*. Syncing starts
+   by itself. A channel the bot was added to before `/connect` starts syncing
+   as soon as its owner connects.
+3. `/import` to turn the posts already in the channel into blog posts.
+4. Optional: `/telegraph` in the DM to turn on Instant View.
 
 `/status` reports what is connected; `/deactivate` pauses a channel.
 

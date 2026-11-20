@@ -36,6 +36,7 @@ The bot calls these on the author's blog, authenticated with
 | `POST` | `/posts` | Create a post. Must return `{"id": "...", "url": "..."}`. |
 | `PATCH` | `/posts/{id}` | Apply an edited channel post. |
 | `POST` | `/media` | Multipart `file` upload. Must return `{"url": "..."}`. |
+| `PUT` | `/webhook` | Optional. `{"url", "secret"}` for the outgoing webhook below, sent after `/connect`. Without it the author pastes both by hand. |
 
 `POST /posts` body:
 
@@ -120,14 +121,17 @@ Two limits worth knowing:
 
 ## Author setup flow
 
-1. DM the bot `/connect`, then send the API base URL and token. The bundled
-   blog serves many authors from one API base URL; each author generates their
-   own token on their admin Profile page, and it decides whose space posts land in.
+1. DM the bot `/connect`. Beside the bundled blog (`BLOG_INTERNAL_URL` and
+   `BOT_INTERNAL_SECRET` set) the bot asks the blog to connect the user by
+   their Telegram id; an author not known that way pastes the token from their
+   admin Profile. Otherwise it asks for the API base URL, then the token.
 2. The bot verifies with `GET /ping`, stores the token encrypted (Fernet), and
-   returns the webhook URL and signing secret.
+   hands the blog its webhook URL and signing secret (`PUT /webhook`). A blog
+   without that route gets them shown to paste by hand.
 3. Add the bot to the channel as an admin with *Post messages*. The bot binds
-   the channel to that author's blog automatically.
-4. Send `/activate` in the channel. `/deactivate` pauses, `/status` reports.
+   the channel to that author's blog and switches syncing on. A channel added
+   before `/connect` waits, and is switched on when its owner connects.
+4. `/deactivate` in the channel pauses, `/activate` resumes, `/status` reports.
 5. Send `/import` to pull in everything already posted in the channel.
 
 ## Running it
