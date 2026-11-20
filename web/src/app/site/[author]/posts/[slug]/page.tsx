@@ -7,7 +7,10 @@ import { ArrowLeft, ArrowRight, ExternalLink } from "@/components/Icons";
 import { PostRow } from "@/components/PostRow";
 import ShareButton from "@/components/ShareButton";
 import TelegramButton from "@/components/TelegramButton";
+import Contents from "@/components/Contents";
+import SeriesBox from "@/components/SeriesBox";
 import TopicList from "@/components/TopicList";
+import { withFootnotes, withHeadingAnchors } from "@/lib/article";
 import { getAuthor, getPost, type PostSummary } from "@/lib/api";
 import { authorUrl } from "@/lib/hosts";
 import { dict, formatDate, localeOf, type Dictionary } from "@/lib/i18n";
@@ -71,7 +74,9 @@ export default async function PostPage({ params }: Props) {
   const { author } = post;
   const locale = localeOf(author.locale);
   const t = dict(locale);
-  const html = post.html ? withoutLeadingTitle(post.html, post.title) : "";
+  const { html, headings } = withHeadingAnchors(
+    withFootnotes(post.html ? withoutLeadingTitle(post.html, post.title) : "", t.backToText),
+  );
   const lang = guessLang(`${post.title} ${stripTags(html).slice(0, 400)}`);
   const visual = post.media.filter((item) => item.type !== "document");
   const video = post.post_type === "video" ? visual.find((item) => item.type === "video") : undefined;
@@ -127,6 +132,10 @@ export default async function PostPage({ params }: Props) {
             <img src={post.cover_image} alt="" fetchPriority="high" className="w-full bg-surface object-cover sm:rounded-md" />
           </figure>
         )}
+
+        {post.series && <SeriesBox series={post.series} current={post.slug} t={t} />}
+
+        <Contents headings={headings} label={t.contents} />
 
         {html && (
           // The body is written by the author, in the admin or in their channel,

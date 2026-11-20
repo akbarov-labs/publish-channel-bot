@@ -100,6 +100,18 @@ class PostForm
                             ->helperText('One post can be pinned at a time; pinning this one unpins the other.')
                             ->formatStateUsing(fn ($state): bool => filled($state))
                             ->dehydrateStateUsing(fn ($state, $record) => $state ? ($record?->pinned_at ?? now()) : null),
+                        Select::make('series_id')
+                            ->label('Series')
+                            ->options(fn () => auth()->user()->series()->orderBy('title')->pluck('title', 'id'))
+                            ->placeholder('Not in a series')
+                            ->helperText('Make series under Series in the menu.'),
+                        TextInput::make('series_position')
+                            ->label('Part number')
+                            ->numeric()
+                            ->minValue(1)
+                            ->maxValue(9999)
+                            ->helperText('Leave empty to order parts by date.')
+                            ->visible(fn (callable $get) => filled($get('series_id'))),
                         FileUpload::make('cover_image')
                             ->image()
                             ->directory('posts')

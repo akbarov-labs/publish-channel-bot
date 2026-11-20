@@ -306,3 +306,44 @@ body {
     scroll-behavior: auto !important;
   }
 }
+
+/* Footnotes: [^1] in a post becomes a small linked number, notes at the end. */
+.prose-post .footnote-ref {
+  font-family: var(--font-sans);
+  font-size: 0.7em;
+  line-height: 0;
+  margin-left: 0.1em;
+}
+
+.prose-post .footnote-ref a {
+  text-decoration: none;
+  color: var(--accent);
+  padding: 0 0.15em;
+}
+
+.prose-post .footnotes {
+  margin-top: 3em;
+  font-size: 0.85em;
+  color: var(--ink-soft);
+}
+
+.prose-post .footnotes hr {
+  width: 4rem;
+  margin: 0 0 1.5em;
+  border: 0;
+  border-top: 1px solid var(--line);
+}
+
+.prose-post .footnotes li:target,
+.prose-post .footnote-ref:target a {
+  background: var(--accent-soft);
+}
+
+.prose-post .footnote-back {
+  text-decoration: none;
+}
+
+/* Headings are jump targets from the contents; keep them clear of the sticky bar. */
+.prose-post :is(h2, h3, h4)[id] {
+  scroll-margin-top: 5rem;
+}

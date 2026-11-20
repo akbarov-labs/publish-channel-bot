@@ -27,7 +27,7 @@ class Post extends Model
     protected $fillable = [
         'user_id', 'title', 'slug', 'html', 'excerpt', 'post_type', 'status',
         'source', 'external_id', 'telegraph_url', 'cover_image', 'published_at',
-        'pinned_at',
+        'pinned_at', 'series_id', 'series_position',
     ];
 
     protected function casts(): array
@@ -171,6 +171,11 @@ class Post extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function series(): BelongsTo
+    {
+        return $this->belongsTo(Series::class);
     }
 
     public function tags(): BelongsToMany

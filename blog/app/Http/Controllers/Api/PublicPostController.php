@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\AuthorResource;
 use App\Http\Resources\PublicPostResource;
 use App\Models\Post;
+use App\Models\Series;
 use App\Models\Tag;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
@@ -79,6 +80,23 @@ class PublicPostController extends Controller
         return $response;
     }
 
+    /** A series and its visible parts, in reading order. */
+    public function series(string $username, string $slug): JsonResponse
+    {
+        $author = User::where('username', $username)->firstOrFail();
+        $series = $author->series()->where('slug', $slug)->firstOrFail();
+
+        $parts = $series->visibleParts()->with(['media', 'tags'])->get();
+        abort_if($parts->isEmpty(), 404);
+
+        return response()->json([
+            'title' => $series->title,
+            'slug' => $series->slug,
+            'description' => $series->description,
+            'posts' => PublicPostResource::collection($parts)->resolve(),
+        ]);
+    }
+
     /** An author's topics that have posts, the busiest first. */
     public function topics(string $username): JsonResponse
     {
@@ -148,12 +166,28 @@ class PublicPostController extends Controller
         $older = $neighbour('<', 'desc');
         $newer = $neighbour('>', 'asc');
 
+        $series = $post->series_id ? $author->series()->find($post->series_id) : null;
+
         return response()->json([
             ...(new PublicPostResource($post, withBody: true))->resolve(),
+            'series' => $series ? $this->seriesSummary($series) : null,
             'older' => $older ? (new PublicPostResource($older))->resolve() : null,
             'newer' => $newer ? (new PublicPostResource($newer))->resolve() : null,
             'more' => PublicPostResource::collection($more)->resolve(),
         ]);
+    }
+
+    /** @return array{title: string, slug: string, parts: list<array{title: string, slug: string}>} */
+    private function seriesSummary(Series $series): array
+    {
+        return [
+            'title' => $series->title,
+            'slug' => $series->slug,
+            'parts' => $series->visibleParts()->get(['title', 'slug'])
+                ->map(fn (Post $part) => ['title' => $part->title, 'slug' => $part->slug])
+                ->values()
+                ->all(),
+        ];
     }
 
     private function authorsWithStats(): Builder

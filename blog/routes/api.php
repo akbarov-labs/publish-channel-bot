@@ -38,5 +38,6 @@ Route::prefix('public')->group(function () {
     Route::get('/authors/{username}/posts', [PublicPostController::class, 'authorPosts']);
     Route::get('/authors/{username}/sitemap', [PublicPostController::class, 'sitemap']);
     Route::get('/authors/{username}/topics', [PublicPostController::class, 'topics']);
+    Route::get('/authors/{username}/series/{slug}', [PublicPostController::class, 'series']);
     Route::get('/authors/{username}/posts/{slug}', [PublicPostController::class, 'show']);
 });

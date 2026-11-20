@@ -42,8 +42,22 @@ export type PostSummary = {
   topics?: Topic[];
 };
 
+export type SeriesSummary = {
+  title: string;
+  slug: string;
+  parts: { title: string; slug: string }[];
+};
+
+export type Series = {
+  title: string;
+  slug: string;
+  description: string | null;
+  posts: PostSummary[];
+};
+
 export type Post = PostSummary & {
   html: string | null;
+  series?: SeriesSummary | null;
   author: Author;
   older: PostSummary | null;
   newer: PostSummary | null;
@@ -105,6 +119,10 @@ export const getTopicPosts = cache((username: string, topic: string, page = 1) =
 /** Posts whose title or text has every word of the query. */
 export const searchPosts = cache((username: string, query: string, page = 1) =>
   get<Paginated<PostSummary>>(`/authors/${segment(username)}/posts?q=${segment(query)}&page=${page}`),
+);
+
+export const getSeries = cache((username: string, slug: string) =>
+  get<Series>(`/authors/${segment(username)}/series/${segment(slug)}`),
 );
 
 /** An author's topics that have posts, the busiest first. */
