@@ -55,7 +55,26 @@ class PublicPostController extends Controller
             ->latest('published_at')
             ->paginate($this->perPage($request));
 
-        return $this->paginated($posts);
+        // The RSS feed asks for bodies so readers can read whole posts in their app.
+        return $this->paginated($posts, withBody: $request->boolean('with_body'));
+    }
+
+    /** Every visible post's address and last change, for the author's sitemap. */
+    public function sitemap(string $username): JsonResponse
+    {
+        $author = User::where('username', $username)->firstOrFail();
+
+        $posts = $author->posts()
+            ->visible()
+            ->latest('published_at')
+            ->get(['slug', 'published_at', 'updated_at']);
+
+        return response()->json([
+            'data' => $posts->map(fn (Post $post) => [
+                'slug' => $post->slug,
+                'updated_at' => ($post->updated_at ?? $post->published_at)?->toAtomString(),
+            ])->values(),
+        ]);
     }
 
     /** One post, with the author and the neighbouring posts for "read next". */
@@ -109,10 +128,12 @@ class PublicPostController extends Controller
         return max(1, min((int) $request->integer('per_page', 12), 50));
     }
 
-    private function paginated(LengthAwarePaginator $posts): JsonResponse
+    private function paginated(LengthAwarePaginator $posts, bool $withBody = false): JsonResponse
     {
         return response()->json([
-            'data' => PublicPostResource::collection($posts->getCollection())->resolve(),
+            'data' => $posts->getCollection()
+                ->map(fn (Post $post) => (new PublicPostResource($post, $withBody))->resolve())
+                ->values(),
             'current_page' => $posts->currentPage(),
             'last_page' => $posts->lastPage(),
             'total' => $posts->total(),

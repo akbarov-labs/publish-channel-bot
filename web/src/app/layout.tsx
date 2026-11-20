@@ -4,6 +4,7 @@ import localFont from "next/font/local";
 import LocaleProvider from "@/components/LocaleProvider";
 import { defaultLocale, dict } from "@/lib/i18n";
 import { requestLocale } from "@/lib/request";
+import { rootUrl } from "@/lib/hosts";
 import { SITE_NAME } from "@/lib/site";
 import "./globals.css";
 
@@ -44,6 +45,7 @@ const literataOkina = localFont({
 export const metadata: Metadata = {
   title: { default: SITE_NAME, template: `%s · ${SITE_NAME}` },
   description: dict(defaultLocale()).siteDescription,
+  alternates: { types: { "application/rss+xml": [{ url: `${rootUrl().origin}/feed.xml`, title: SITE_NAME }] } },
 };
 
 export const viewport: Viewport = {

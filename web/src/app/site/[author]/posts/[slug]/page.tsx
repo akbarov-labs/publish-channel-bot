@@ -25,7 +25,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title: post.title,
     description,
-    alternates: { canonical: url },
+    // Metadata merges shallowly, so the author's feed link is repeated here.
+    alternates: {
+      canonical: url,
+      types: { "application/rss+xml": [{ url: "/feed.xml", title: post.author.name }] },
+    },
     openGraph: {
       type: "article",
       url,

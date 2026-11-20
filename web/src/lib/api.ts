@@ -87,6 +87,21 @@ export const getAuthorPosts = cache(
     get<Paginated<PostSummary>>(`/authors/${segment(username)}/posts?page=${page}`),
 );
 
+/** The latest posts with their bodies, for the author's RSS feed. */
+export const getAuthorFeed = cache(
+  (username: string) =>
+    get<Paginated<PostSummary & { html: string | null }>>(
+      `/authors/${segment(username)}/posts?per_page=20&with_body=1`,
+    ),
+);
+
+/** Every visible post's slug and last change, for the author's sitemap. */
+export const getAuthorSitemap = cache(
+  async (username: string) =>
+    (await get<{ data: { slug: string; updated_at: string | null }[] }>(`/authors/${segment(username)}/sitemap`))
+      ?.data ?? null,
+);
+
 export const getPost = cache((username: string, slug: string) =>
   get<Post>(`/authors/${segment(username)}/posts/${segment(slug)}`),
 );

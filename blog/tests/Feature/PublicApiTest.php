@@ -160,4 +160,35 @@ class PublicApiTest extends TestCase
         $this->getJson('/api/public/authors')->assertOk()->assertJsonPath('data.0.locale', 'ru');
         $this->getJson('/api/public/posts')->assertOk()->assertJsonPath('data.0.author.locale', 'ru');
     }
+
+    public function test_an_authors_feed_includes_bodies_only_when_asked(): void
+    {
+        $aziza = User::factory()->create(['username' => 'aziza']);
+        $this->publish($aziza, 'One');
+
+        $this->getJson('/api/public/authors/aziza/posts')
+            ->assertOk()
+            ->assertJsonMissingPath('data.0.html');
+
+        $this->getJson('/api/public/authors/aziza/posts?with_body=1')
+            ->assertOk()
+            ->assertJsonPath('data.0.html', '<p>Body of One</p>');
+    }
+
+    public function test_the_sitemap_lists_every_visible_post_of_one_author(): void
+    {
+        $aziza = User::factory()->create(['username' => 'aziza']);
+        $dmitry = User::factory()->create(['username' => 'dmitry']);
+        $this->publish($aziza, 'Older', ['published_at' => now()->subDay()]);
+        $this->publish($aziza, 'Newer');
+        $this->publish($dmitry, 'Someone else');
+        $aziza->posts()->create(['title' => 'Draft', 'status' => 'draft']);
+
+        $response = $this->getJson('/api/public/authors/aziza/sitemap')->assertOk();
+
+        $this->assertSame(['newer', 'older'], array_column($response->json('data'), 'slug'));
+        $this->assertNotNull($response->json('data.0.updated_at'));
+
+        $this->getJson('/api/public/authors/nobody/sitemap')->assertNotFound();
+    }
 }
