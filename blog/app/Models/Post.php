@@ -26,6 +26,7 @@ class Post extends Model
     protected $fillable = [
         'user_id', 'title', 'slug', 'html', 'excerpt', 'post_type', 'status',
         'source', 'external_id', 'telegraph_url', 'cover_image', 'published_at',
+        'pinned_at',
     ];
 
     protected function casts(): array
@@ -33,6 +34,8 @@ class Post extends Model
         return [
             'published_at' => 'datetime',
             'telegram_notified_at' => 'datetime',
+            'pinned_at' => 'datetime',
+            'announce_pending' => 'boolean',
         ];
     }
 
@@ -46,6 +49,22 @@ class Post extends Model
         static::saving(function (Post $post) {
             if (blank($post->excerpt) && filled($post->html)) {
                 $post->excerpt = static::excerptFrom($post->html);
+            }
+
+            // Published with no date means "now"; without one it would never show.
+            if ($post->isPublished() && $post->published_at === null) {
+                $post->published_at = now();
+            }
+        });
+
+        // An author has one pinned post at most: pinning another unpins the old one.
+        static::saved(function (Post $post) {
+            if ($post->pinned_at !== null && ($post->wasRecentlyCreated || $post->wasChanged('pinned_at'))) {
+                static::query()
+                    ->where('user_id', $post->user_id)
+                    ->whereKeyNot($post->getKey())
+                    ->whereNotNull('pinned_at')
+                    ->update(['pinned_at' => null]);
             }
         });
     }
@@ -98,17 +117,27 @@ class Post extends Model
         return $this->hasMany(PostMedium::class)->orderBy('position');
     }
 
-    /** What the reader site may show: published, dated, and owned by an author. */
+    /**
+     * What the reader site may show: published, owned by an author, and due.
+     * A post published for a future time stays hidden until then.
+     */
     public function scopeVisible(Builder $query): void
     {
         $query->where('status', 'published')
             ->whereNotNull('published_at')
+            ->where('published_at', '<=', now())
             ->whereNotNull('user_id');
     }
 
     public function isPublished(): bool
     {
         return $this->status === 'published';
+    }
+
+    /** Published, but for a time still to come. */
+    public function isScheduled(): bool
+    {
+        return $this->isPublished() && $this->published_at?->isFuture() === true;
     }
 
     /** Came from Telegram, so it must never be pushed back to Telegram. */

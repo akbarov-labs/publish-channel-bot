@@ -18,6 +18,15 @@ class PostObserver
             return;
         }
 
+        // Scheduled for later: posts:announce-due sends it when the time comes.
+        if ($post->published_at->isFuture()) {
+            if (! $post->announce_pending) {
+                $post->forceFill(['announce_pending' => true])->saveQuietly();
+            }
+
+            return;
+        }
+
         PublishToTelegram::dispatch($post);
     }
 }

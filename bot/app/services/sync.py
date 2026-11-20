@@ -251,6 +251,22 @@ async def channel_edit_to_site(session: AsyncSession, channel: Channel, message:
     return True
 
 
+async def channel_pin_to_site(session: AsyncSession, channel: Channel, pinned_message_id: int) -> bool:
+    """A message pinned in the channel pins its post on the author's page.
+
+    Telegram reports pins but not unpins, so the site keeps the last pin until
+    another post is pinned, here or in the admin.
+    """
+    if not channel.active:
+        return False
+    link = await link_for_message(session, channel.id, pinned_message_id)
+    if not link or not link.site_post_id:
+        return False
+    site = await session.get(Site, channel.site_id)
+    await site_client_for(site).pin_post(link.site_post_id)
+    return True
+
+
 async def site_post_to_channel(
     session: AsyncSession,
     bot: Bot,
@@ -306,6 +322,7 @@ async def site_post_to_channel(
 __all__ = [
     "SiteError",
     "channel_edit_to_site",
+    "channel_pin_to_site",
     "channel_post_to_site",
     "link_for_message",
     "link_for_post",

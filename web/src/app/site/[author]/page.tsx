@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import Avatar from "@/components/Avatar";
 import Pagination, { pageFrom } from "@/components/Pagination";
+import { Pin } from "@/components/Icons";
 import { FeaturedPost, PostRow } from "@/components/PostRow";
 import { getAuthor, getAuthorPosts } from "@/lib/api";
 import { dict, localeOf } from "@/lib/i18n";
@@ -19,9 +20,11 @@ export default async function AuthorHome({ params, searchParams }: PageProps<"/s
   const locale = localeOf(author.locale);
   const t = dict(locale);
 
-  const [first, ...rest] = posts.data;
-  const featured = page === 1 ? first : undefined;
-  const rows = featured ? rest : posts.data;
+  // Page one leads with the pinned post when there is one, else the newest.
+  const pinned = page === 1 ? (posts.pinned ?? undefined) : undefined;
+  const listed = pinned ? posts.data.filter((post) => post.id !== pinned.id) : posts.data;
+  const featured = page === 1 ? (pinned ?? listed[0]) : undefined;
+  const rows = featured && !pinned ? listed.slice(1) : listed;
 
   return (
     <main>
@@ -62,7 +65,19 @@ export default async function AuthorHome({ params, searchParams }: PageProps<"/s
           <>
             {featured && (
               <div className="border-t border-line pt-8">
-                <FeaturedPost post={featured} href={`/posts/${featured.slug}`} locale={locale} />
+                <FeaturedPost
+                  post={featured}
+                  href={`/posts/${featured.slug}`}
+                  locale={locale}
+                  eyebrow={
+                    pinned ? (
+                      <>
+                        <Pin className="size-4" />
+                        {t.pinned}
+                      </>
+                    ) : undefined
+                  }
+                />
               </div>
             )}
             {page > 1 && <h1 className="title pt-10 text-xl">{t.olderPostsPage(page)}</h1>}

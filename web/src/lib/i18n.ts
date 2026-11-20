@@ -115,6 +115,37 @@ export type Dictionary = {
   errorTitle: string;
   errorText: string;
   tryAgain: string;
+
+  // Features added after launch: pinning, topics, search, series, notes,
+  // reactions and comments, audio, polls and draft previews.
+  pinned: string;
+  topics: string;
+  topicPosts: (count: number) => string;
+  allTopics: string;
+  search: string;
+  searchLabel: string;
+  searchPlaceholder: string;
+  searchSubmit: string;
+  searchResults: (count: number, query: string) => string;
+  searchNothing: (query: string) => string;
+  searchHint: string;
+  series: string;
+  partOf: (part: number, count: number) => string;
+  seriesParts: (count: number) => string;
+  contents: string;
+  notes: string;
+  backToText: string;
+  views: (count: number) => string;
+  reactions: string;
+  comments: string;
+  showComments: string;
+  discussInTelegram: string;
+  audio: string;
+  files: string;
+  poll: string;
+  pollVotes: (count: number) => string;
+  voteInTelegram: string;
+  draftPreview: string;
 };
 
 const uz: Dictionary = {
@@ -209,6 +240,35 @@ const uz: Dictionary = {
   errorTitle: "Postlar yuklanmadi",
   errorText: "Blog oʻz vaqtida javob bermadi. Bu odatda tez oʻtib ketadi — birozdan soʻng qayta urinib koʻring.",
   tryAgain: "Qayta urinish",
+
+  pinned: "Qadalgan",
+  topics: "Mavzular",
+  topicPosts: (count) => plural("uz", count, { one: "# ta post", other: "# ta post" }),
+  allTopics: "Barcha mavzular",
+  search: "Qidiruv",
+  searchLabel: "Postlardan qidirish",
+  searchPlaceholder: "Soʻz yoki ibora",
+  searchSubmit: "Qidirish",
+  searchResults: (count, query) => `“${query}” boʻyicha ${count} ta natija`,
+  searchNothing: (query) => `“${query}” boʻyicha hech narsa topilmadi. Boshqa soʻz bilan urinib koʻring.`,
+  searchHint: "Sarlavha va matnlardan qidiradi.",
+  series: "Turkum",
+  partOf: (part, count) => `${count} qismdan ${part}-qism`,
+  seriesParts: (count) => plural("uz", count, { one: "# qism", other: "# qism" }),
+  contents: "Mundarija",
+  notes: "Izohlar",
+  backToText: "Matnga qaytish",
+  views: (count) => plural("uz", count, { one: "# marta oʻqildi", other: "# marta oʻqildi" }),
+  reactions: "Reaksiyalar",
+  comments: "Izohlar",
+  showComments: "Izohlarni koʻrsatish",
+  discussInTelegram: "Telegramda muhokama qilish",
+  audio: "Audio",
+  files: "Fayllar",
+  poll: "Soʻrovnoma",
+  pollVotes: (count) => plural("uz", count, { one: "# ovoz", other: "# ovoz" }),
+  voteInTelegram: "Telegramda ovoz berish",
+  draftPreview: "Qoralama. Uni faqat shu havolaga ega odamlar koʻradi.",
 };
 
 const ru: Dictionary = {
@@ -302,6 +362,36 @@ const ru: Dictionary = {
   errorTitle: "Посты не загрузились",
   errorText: "Блог не ответил вовремя. Обычно это ненадолго — попробуйте ещё раз через минуту.",
   tryAgain: "Попробовать снова",
+
+  pinned: "Закреплено",
+  topics: "Темы",
+  topicPosts: (count) => plural("ru", count, { one: "# пост", few: "# поста", many: "# постов", other: "# поста" }),
+  allTopics: "Все темы",
+  search: "Поиск",
+  searchLabel: "Поиск по постам",
+  searchPlaceholder: "Слово или фраза",
+  searchSubmit: "Найти",
+  searchResults: (count, query) =>
+    plural("ru", count, { one: "# результат", few: "# результата", many: "# результатов", other: "# результата" }) + ` по запросу «${query}»`,
+  searchNothing: (query) => `По запросу «${query}» ничего не нашлось. Попробуйте другое слово.`,
+  searchHint: "Ищет в заголовках и текстах.",
+  series: "Серия",
+  partOf: (part, count) => `Часть ${part} из ${count}`,
+  seriesParts: (count) => plural("ru", count, { one: "# часть", few: "# части", many: "# частей", other: "# части" }),
+  contents: "Содержание",
+  notes: "Примечания",
+  backToText: "Вернуться к тексту",
+  views: (count) => plural("ru", count, { one: "# просмотр", few: "# просмотра", many: "# просмотров", other: "# просмотра" }),
+  reactions: "Реакции",
+  comments: "Комментарии",
+  showComments: "Показать комментарии",
+  discussInTelegram: "Обсудить в Telegram",
+  audio: "Аудио",
+  files: "Файлы",
+  poll: "Опрос",
+  pollVotes: (count) => plural("ru", count, { one: "# голос", few: "# голоса", many: "# голосов", other: "# голоса" }),
+  voteInTelegram: "Голосовать в Telegram",
+  draftPreview: "Черновик. Его видят только те, у кого есть эта ссылка.",
 };
 
 const en: Dictionary = {
@@ -396,6 +486,35 @@ const en: Dictionary = {
   errorTitle: "Posts didn’t load",
   errorText: "The blog didn’t answer in time. This is usually brief, so try again in a moment.",
   tryAgain: "Try again",
+
+  pinned: "Pinned",
+  topics: "Topics",
+  topicPosts: (count) => plural("en", count, { one: "# post", other: "# posts" }),
+  allTopics: "All topics",
+  search: "Search",
+  searchLabel: "Search posts",
+  searchPlaceholder: "A word or phrase",
+  searchSubmit: "Search",
+  searchResults: (count, query) => plural("en", count, { one: "# result", other: "# results" }) + ` for “${query}”`,
+  searchNothing: (query) => `Nothing matches “${query}”. Try another word.`,
+  searchHint: "Searches titles and text.",
+  series: "Series",
+  partOf: (part, count) => `Part ${part} of ${count}`,
+  seriesParts: (count) => plural("en", count, { one: "# part", other: "# parts" }),
+  contents: "Contents",
+  notes: "Notes",
+  backToText: "Back to the text",
+  views: (count) => plural("en", count, { one: "# view", other: "# views" }),
+  reactions: "Reactions",
+  comments: "Comments",
+  showComments: "Show comments",
+  discussInTelegram: "Discuss in Telegram",
+  audio: "Audio",
+  files: "Files",
+  poll: "Poll",
+  pollVotes: (count) => plural("en", count, { one: "# vote", other: "# votes" }),
+  voteInTelegram: "Vote in Telegram",
+  draftPreview: "Draft. Only people with this link can see it.",
 };
 
 const DICTIONARIES: Record<Locale, Dictionary> = { uz, ru, en };

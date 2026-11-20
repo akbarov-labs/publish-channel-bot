@@ -12,7 +12,7 @@ from app.db import repo
 from app.db.models import WaitingChannel
 from app.db.session import session_scope
 from app.services.site_client import SiteError
-from app.services.sync import channel_edit_to_site, channel_post_to_site
+from app.services.sync import channel_edit_to_site, channel_pin_to_site, channel_post_to_site
 
 log = logging.getLogger(__name__)
 router = Router(name="channel")
@@ -97,6 +97,19 @@ async def on_channel_command(message: Message, bot: Bot) -> None:
         else:
             note = f"Sync is {'on' if channel.active else 'paused'} for {channel.site.api_base}."
     await bot.send_message(message.chat.id, note)
+
+
+@router.channel_post(F.pinned_message)
+async def on_channel_pin(message: Message) -> None:
+    """A pinned message in the channel pins its post on the site."""
+    async with session_scope() as session:
+        channel = await repo.get_channel(session, message.chat.id)
+        if channel is None or message.pinned_message is None:
+            return
+        try:
+            await channel_pin_to_site(session, channel, message.pinned_message.message_id)
+        except SiteError as exc:
+            log.error("channel %s pin -> site failed: %s", message.chat.id, exc)
 
 
 @router.channel_post()

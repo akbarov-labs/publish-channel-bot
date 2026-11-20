@@ -89,4 +89,14 @@ class BotPostController extends Controller
 
         return response()->json(['id' => (string) $post->id, 'url' => $post->url()]);
     }
+
+    /** The channel pinned this post's message: pin it on the site too. */
+    public function pin(Request $request, Post $post): JsonResponse
+    {
+        abort_unless($post->user_id === $request->user()->id, 404);
+
+        $post->update(['pinned_at' => now()]);
+
+        return response()->json(['id' => (string) $post->id, 'pinned' => true]);
+    }
 }

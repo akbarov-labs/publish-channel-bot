@@ -56,7 +56,18 @@ class PublicPostController extends Controller
             ->paginate($this->perPage($request));
 
         // The RSS feed asks for bodies so readers can read whole posts in their app.
-        return $this->paginated($posts, withBody: $request->boolean('with_body'));
+        $response = $this->paginated($posts, withBody: $request->boolean('with_body'));
+
+        // The front page shows the pinned post above the rest.
+        if ($posts->currentPage() === 1) {
+            $pinned = $author->posts()->visible()->whereNotNull('pinned_at')->with('media')->first();
+            $response->setData([
+                ...$response->getData(true),
+                'pinned' => $pinned ? (new PublicPostResource($pinned))->resolve() : null,
+            ]);
+        }
+
+        return $response;
     }
 
     /** Every visible post's address and last change, for the author's sitemap. */

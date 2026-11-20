@@ -85,6 +85,10 @@ class SiteClient:
             "PATCH", f"/posts/{post_id}", json={"source": "telegram", "title": title, "html": html}
         )
 
+    async def pin_post(self, post_id: str) -> None:
+        """The channel pinned this post's message; the site pins it too."""
+        await self._request("POST", f"/posts/{post_id}/pin")
+
     async def upload_media(self, filename: str, content: bytes, content_type: str) -> str:
         data = await self._request(
             "POST", "/media", files={"file": (filename, content, content_type)}

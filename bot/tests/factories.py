@@ -78,6 +78,9 @@ class StubSiteClient:
     async def update_post(self, post_id: str, **kwargs: Any) -> None:
         self.created.append({"update": post_id, **kwargs})
 
+    async def pin_post(self, post_id: str) -> None:
+        self.created.append({"pin": post_id})
+
 
 @dataclass
 class StubOrigin:

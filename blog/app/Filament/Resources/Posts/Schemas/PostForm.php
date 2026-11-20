@@ -10,6 +10,7 @@ use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Illuminate\Support\Str;
@@ -82,7 +83,15 @@ class PostForm
                             ->default('draft')
                             ->required()
                             ->helperText('Publishing announces the post in the connected Telegram channel.'),
-                        DateTimePicker::make('published_at'),
+                        DateTimePicker::make('published_at')
+                            ->label('Publish at')
+                            ->seconds(false)
+                            ->helperText('Leave empty to publish now. A future time schedules the post: it appears on your site and in the channel at that time.'),
+                        Toggle::make('pinned_at')
+                            ->label('Pin to the top of my page')
+                            ->helperText('One post can be pinned at a time; pinning this one unpins the other.')
+                            ->formatStateUsing(fn ($state): bool => filled($state))
+                            ->dehydrateStateUsing(fn ($state, $record) => $state ? ($record?->pinned_at ?? now()) : null),
                         FileUpload::make('cover_image')
                             ->image()
                             ->directory('posts')

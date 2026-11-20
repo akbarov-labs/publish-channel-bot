@@ -14,6 +14,7 @@ Route::prefix('telegram')->middleware('bot.auth')->group(function () {
     Route::get('/ping', [BotPostController::class, 'ping']);
     Route::post('/posts', [BotPostController::class, 'store']);
     Route::patch('/posts/{post}', [BotPostController::class, 'update']);
+    Route::post('/posts/{post}/pin', [BotPostController::class, 'pin']);
     Route::post('/media', [BotMediaController::class, 'store']);
     Route::put('/webhook', [BotConnectController::class, 'webhook']);
 });

@@ -34,6 +34,7 @@ class PublicPostResource extends JsonResource
             'cover_image' => User::publicUrl($this->cover_image),
             'telegraph_url' => $this->telegraph_url,
             'published_at' => $this->published_at?->toAtomString(),
+            'pinned' => $this->pinned_at !== null,
             'url' => $this->url(),
             'media' => $this->whenLoaded('media', fn () => $this->media->map(fn ($item) => [
                 'id' => $item->id,

@@ -32,6 +32,7 @@ export type PostSummary = {
   url: string;
   media: PostMedium[];
   author?: Author;
+  pinned?: boolean;
 };
 
 export type Post = PostSummary & {
@@ -84,7 +85,7 @@ export const getAuthor = cache((username: string) => get<Author>(`/authors/${seg
 
 export const getAuthorPosts = cache(
   (username: string, page = 1) =>
-    get<Paginated<PostSummary>>(`/authors/${segment(username)}/posts?page=${page}`),
+    get<Paginated<PostSummary> & { pinned?: PostSummary | null }>(`/authors/${segment(username)}/posts?page=${page}`),
 );
 
 /** The latest posts with their bodies, for the author's RSS feed. */
