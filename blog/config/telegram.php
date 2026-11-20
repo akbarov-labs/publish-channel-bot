@@ -10,4 +10,8 @@ return [
 
     // Shared secret used to sign the webhook body with HMAC-SHA256.
     'webhook_secret' => env('TELEGRAM_WEBHOOK_SECRET'),
+
+    // Bearer secret the bot presents on /api/internal/* (page requests). The
+    // same value is set on the bot. Unset, those routes answer 404.
+    'internal_secret' => env('BOT_INTERNAL_SECRET'),
 ];

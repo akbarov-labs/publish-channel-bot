@@ -21,6 +21,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->alias([
             'bot.auth' => App\Http\Middleware\AuthenticateBot::class,
+            'internal.auth' => App\Http\Middleware\AuthenticateInternal::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

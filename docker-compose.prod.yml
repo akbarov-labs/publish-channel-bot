@@ -74,6 +74,10 @@ services:
       TELEGRAM_WEBHOOK_SECRET: ${TELEGRAM_WEBHOOK_SECRET:?set TELEGRAM_WEBHOOK_SECRET in .env}
       # Where "Request a page" requests from the reader site go (your user id).
       ADMIN_CHAT_ID: ${ADMIN_CHAT_ID:-}
+      # The same requests also land in the admin's "Page requests" list:
+      # the blog over this stack's own network, with a secret both share.
+      BLOG_INTERNAL_URL: http://pcb-blog/api
+      BOT_INTERNAL_SECRET: ${BOT_INTERNAL_SECRET:-}
     networks:
       default: {}
       edge: {}
@@ -115,6 +119,9 @@ services:
       # Production and staging blogs both answer Caddy's certificate question
       # (pcb-tls-ask below); each passes the other's hosts to the other.
       TLS_ASK_PEER_URL: http://pcb-tls-ask-staging/api/tls/allowed
+      # Lets the bot record page requests (/api/internal/*). Unset, those
+      # routes answer 404 and requests reach the admin only in Telegram.
+      BOT_INTERNAL_SECRET: ${BOT_INTERNAL_SECRET:-}
     networks:
       default:
         # How web reaches this blog. Exists only on this stack's own network.
@@ -126,8 +133,10 @@ services:
         aliases: [pcb-tls-ask, pcb-tls-ask-production]
     labels:
       caddy: admin.${DOMAIN}
-      # The certificate check is for Caddy over the Docker network only.
-      caddy.respond: /api/tls/* 404
+      # The certificate check and the bot's calls are for the Docker network
+      # only (the bot's also need BOT_INTERNAL_SECRET).
+      caddy.@internal.path: /api/tls/* /api/internal/*
+      caddy.respond: "@internal 404"
       # By container name, not {{upstreams 80}}: that renders as a bare
       # :80 while the container restarts (kitoblarim.uz 502s, 2026-11-16).
       caddy.reverse_proxy: "publish-channel-bot-blog-1:80"

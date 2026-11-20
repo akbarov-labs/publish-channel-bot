@@ -205,6 +205,14 @@ you. Staging takes its own test bot's username. After editing `.env`,
 recreate the containers as in [Changing `.env` on the server](#changing-env-on-the-server)
 (a bare `docker compose up` asks for the `latest` tag, which is never pushed).
 
+To also collect the requests in the admin, set `BOT_INTERNAL_SECRET`
+(`openssl rand -hex 32`). The bot then records each one on the blog, and
+the oldest admin account (the one made in this step) gets **Page requests**:
+the list, with **Create author**, which makes their account from the
+request, **Message** and **Dismiss**. Other authors never see it. The bot
+reaches the blog over the stack's own network, and Caddy refuses
+`/api/internal/*` from outside.
+
 ### 10. Off-site backups
 
 Add to `/etc/offsite-backup/sources` (`sudo nano`), then

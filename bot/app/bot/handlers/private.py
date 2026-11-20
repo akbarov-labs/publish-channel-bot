@@ -16,6 +16,7 @@ from app.db import repo
 from app.db.models import PendingConnection, Site
 from app.db.session import session_scope
 from app.services.crypto import encrypt, new_webhook_secret
+from app.services.page_requests import PageRequestError, record_page_request
 from app.services.site_client import SiteClient, SiteError
 from app.services.telegraph import TelegraphClient, TelegraphError
 
@@ -63,24 +64,39 @@ def join_notice(user: User) -> str:
 
 @router.message(CommandStart(deep_link=True, magic=F.args == "join"))
 async def on_join_request(message: Message) -> None:
-    admin_chat_id = get_settings().admin_chat_id
-    if admin_chat_id is None:
-        log.warning("page request from %s, but ADMIN_CHAT_ID is not set", message.from_user.id)
+    """Passes the request on twice: as a message to the admin, and to the blog
+    for its "Page requests" list. Either one reaching the admin is enough."""
+    settings = get_settings()
+    user = message.from_user
+    if settings.admin_chat_id is None and not settings.records_page_requests:
+        log.warning("page request from %s, but neither ADMIN_CHAT_ID nor the blog is set up", user.id)
         await on_start(message)
         return
 
     async with session_scope() as session:
-        await repo.get_or_create_author(
-            session, message.from_user.id, message.from_user.username
-        )
-    try:
-        await message.bot.send_message(admin_chat_id, join_notice(message.from_user))
-    except TelegramAPIError:
+        await repo.get_or_create_author(session, user.id, user.username)
+
+    delivered = False
+    if settings.admin_chat_id is not None:
+        try:
+            await message.bot.send_message(settings.admin_chat_id, join_notice(user))
+            delivered = True
+        except TelegramAPIError:
+            log.exception("could not forward a page request to ADMIN_CHAT_ID %s", settings.admin_chat_id)
+    if settings.records_page_requests:
+        try:
+            await record_page_request(
+                user, base_url=settings.blog_internal_url, secret=settings.bot_internal_secret
+            )
+            delivered = True
+        except PageRequestError:
+            log.exception("could not record a page request on the blog")
+
+    if not delivered:
         # The request would be lost silently, so don't tell the user it was sent.
-        log.exception("could not forward a page request to ADMIN_CHAT_ID %s", admin_chat_id)
         await on_start(message)
         return
-    await message.answer(join_reply(message.from_user.language_code))
+    await message.answer(join_reply(user.language_code))
 
 
 @router.message(CommandStart())

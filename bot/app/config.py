@@ -34,11 +34,22 @@ class Settings(BaseSettings):
     # Unset, /start join gets the ordinary welcome instead.
     admin_chat_id: int | None = None
 
-    @field_validator("admin_chat_id", mode="before")
+    # The same requests are also recorded on the blog, for its admin's "Page
+    # requests" list: the blog's API base on the stack's own network, and the
+    # secret shared with the blog (BOT_INTERNAL_SECRET on both). Either unset,
+    # nothing is recorded and the Telegram message is the only trace.
+    blog_internal_url: str | None = None
+    bot_internal_secret: str | None = None
+
+    @field_validator("admin_chat_id", "blog_internal_url", "bot_internal_secret", mode="before")
     @classmethod
     def _blank_is_unset(cls, value: object) -> object:
-        # Compose passes ${ADMIN_CHAT_ID:-} through as an empty string.
+        # Compose passes ${ADMIN_CHAT_ID:-} and friends through as empty strings.
         return None if isinstance(value, str) and not value.strip() else value
+
+    @property
+    def records_page_requests(self) -> bool:
+        return bool(self.blog_internal_url and self.bot_internal_secret)
 
     @property
     def telegram_webhook_path(self) -> str:
