@@ -18,7 +18,7 @@ import SeriesBox from "@/components/SeriesBox";
 import TopicList from "@/components/TopicList";
 import { withFootnotes, withHeadingAnchors } from "@/lib/article";
 import type { Post, PostSummary } from "@/lib/api";
-import { authorUrl } from "@/lib/hosts";
+import { authorHome } from "@/lib/hosts";
 import { dict, formatDate, localeOf, type Dictionary } from "@/lib/i18n";
 import { guessLang, readingMinutes, stripTags, withoutLeadingTitle } from "@/lib/text";
 
@@ -56,7 +56,7 @@ export default function PostView({ post, preview = false }: { post: Post; previe
   const minutes = readingMinutes(html);
   const neighbourIds = new Set([post.older?.id, post.newer?.id]);
   const more = post.more.filter((item) => !neighbourIds.has(item.id));
-  const url = authorUrl(author.username, `/posts/${post.slug}`);
+  const url = authorHome(author, `/posts/${post.slug}`);
 
   return (
     <main>

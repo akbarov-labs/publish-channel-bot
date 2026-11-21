@@ -30,6 +30,8 @@ class AuthorResource extends JsonResource
             'template' => $this->template ?? 'classic',
             // Whether Premium features are on; when it ends stays private.
             'premium' => $this->isPremium(),
+            // Their own domain while it is live; site_url is already on it.
+            'custom_domain' => $this->activeCustomDomain(),
             'posts_count' => $this->whenHas('posts_count'),
             'latest_post_at' => $this->whenHas('latest_post_at', fn () => $this->latest_post_at
                 ? date(DATE_ATOM, strtotime($this->latest_post_at))

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Support\CustomDomain;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Http;
@@ -16,7 +17,10 @@ use Throwable;
  * check anyone could make Caddy request certificates for random subdomains
  * and spend the domain's Let's Encrypt rate limit.
  *
- * Answers 200 for the reader domain's own author hosts. Production and staging
+ * Answers 200 for the reader domain's own author hosts, and for authors' own
+ * verified domains when this stack serves them. A domain stays allowed after
+ * Premium ends, so the reader site can still redirect it to the subdomain
+ * over https. Production and staging
  * share one edge Caddy and therefore one ask URL, which lands on either
  * stack's blog, so a host under the other stack's domain is passed to that
  * stack once (TLS_ASK_PEER_URL) and its answer returned.
@@ -41,7 +45,20 @@ class TlsAskController extends Controller
             return $this->isAuthorHost($label) ? response('', 200) : $this->deny();
         }
 
+        if ($this->isCustomDomain($domain)) {
+            return response('', 200);
+        }
+
         return $this->askPeer($request, $domain);
+    }
+
+    private function isCustomDomain(string $domain): bool
+    {
+        return CustomDomain::enabled()
+            && User::active()
+                ->where('custom_domain', $domain)
+                ->whereNotNull('custom_domain_verified_at')
+                ->exists();
     }
 
     private function isAuthorHost(string $label): bool

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import AuthorBar from "@/components/AuthorBar";
 import { getAuthor } from "@/lib/api";
-import { authorUrl, rootUrl } from "@/lib/hosts";
+import { authorHome, rootUrl } from "@/lib/hosts";
 import { dict, localeOf } from "@/lib/i18n";
 import { SITE_NAME } from "@/lib/site";
 
@@ -15,7 +15,7 @@ export async function generateMetadata({ params }: LayoutProps<"/site/[author]">
   return {
     title: { absolute: author.name, template: `%s — ${author.name}` },
     description: author.bio ?? undefined,
-    metadataBase: new URL(authorUrl(author.username)),
+    metadataBase: new URL(authorHome(author)),
     alternates: { types: { "application/rss+xml": [{ url: "/feed.xml", title: author.name }] } },
     openGraph: { siteName: author.name, images: author.avatar_url ? [author.avatar_url] : undefined },
   };
