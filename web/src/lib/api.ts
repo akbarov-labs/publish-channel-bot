@@ -52,6 +52,8 @@ export type PostSummary = {
   media: PostMedium[];
   author?: Author;
   pinned?: boolean;
+  /** At 200 words a minute; listings carry it since they have no body. */
+  reading_minutes?: number;
   topics?: Topic[];
   views?: number;
   reactions?: Reaction[];

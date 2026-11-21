@@ -97,4 +97,14 @@ class TopicsAndSearchTest extends TestCase
         $this->assertSame(['100% sure'], $titles('100%'));
         $this->assertSame([], $titles('nothing-like-this'));
     }
+
+    public function test_listings_carry_a_reading_time(): void
+    {
+        $this->publish('Short', '<p>A few words.</p>');
+        $this->publish('Long', '<p>'.str_repeat('word ', 1000).'</p>', ['published_at' => now()->subHour()]);
+
+        $this->getJson('/api/public/authors/aziza/posts')
+            ->assertJsonPath('data.0.reading_minutes', 1)
+            ->assertJsonPath('data.1.reading_minutes', 5);
+    }
 }
