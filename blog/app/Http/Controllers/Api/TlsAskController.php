@@ -54,7 +54,7 @@ class TlsAskController extends Controller
             return false;
         }
 
-        return User::where('username', $label)->exists();
+        return User::active()->where('username', $label)->exists();
     }
 
     private function askPeer(Request $request, string $domain): Response

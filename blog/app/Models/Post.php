@@ -222,7 +222,9 @@ class Post extends Model
         $query->where('status', 'published')
             ->whereNotNull('published_at')
             ->where('published_at', '<=', now())
-            ->whereNotNull('user_id');
+            ->whereNotNull('user_id')
+            // A blocked author's posts leave the site with them.
+            ->whereHas('user', fn (Builder $author) => $author->active());
     }
 
     public function isPublished(): bool

@@ -49,7 +49,7 @@ class PublicPostController extends Controller
 
     public function authorPosts(Request $request, string $username): JsonResponse
     {
-        $author = User::where('username', $username)->firstOrFail();
+        $author = User::active()->where('username', $username)->firstOrFail();
         $topic = $request->string('topic')->trim()->value();
         $terms = $request->string('q')->trim()->limit(100, '')->value();
 
@@ -86,7 +86,7 @@ class PublicPostController extends Controller
      */
     public function view(string $username, string $slug): JsonResponse
     {
-        $author = User::where('username', $username)->firstOrFail();
+        $author = User::active()->where('username', $username)->firstOrFail();
         $post = $author->posts()->visible()->where('slug', $slug)->firstOrFail();
 
         $post->recordView();
@@ -97,7 +97,7 @@ class PublicPostController extends Controller
     /** A series and its visible parts, in reading order. */
     public function series(string $username, string $slug): JsonResponse
     {
-        $author = User::where('username', $username)->firstOrFail();
+        $author = User::active()->where('username', $username)->firstOrFail();
         $series = $author->series()->where('slug', $slug)->firstOrFail();
 
         $parts = $series->visibleParts()->with(['media', 'tags'])->get();
@@ -114,7 +114,7 @@ class PublicPostController extends Controller
     /** An author's topics that have posts, the busiest first. */
     public function topics(string $username): JsonResponse
     {
-        $author = User::where('username', $username)->firstOrFail();
+        $author = User::active()->where('username', $username)->firstOrFail();
 
         $topics = $author->tags()
             ->whereHas('posts', fn (Builder $query) => $query->visible())
@@ -135,7 +135,7 @@ class PublicPostController extends Controller
     /** Every visible post's address and last change, for the author's sitemap. */
     public function sitemap(string $username): JsonResponse
     {
-        $author = User::where('username', $username)->firstOrFail();
+        $author = User::active()->where('username', $username)->firstOrFail();
 
         $posts = $author->posts()
             ->visible()
@@ -235,6 +235,7 @@ class PublicPostController extends Controller
     private function authorsWithStats(): Builder
     {
         return User::query()
+            ->active()
             ->whereNotNull('username')
             ->withCount(['posts' => fn (Builder $query) => $query->visible()])
             ->withMax(['posts as latest_post_at' => fn (Builder $query) => $query->visible()], 'published_at');
