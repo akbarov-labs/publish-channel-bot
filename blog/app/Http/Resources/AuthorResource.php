@@ -28,6 +28,8 @@ class AuthorResource extends JsonResource
             // The language of the space's interface, not of its posts.
             'locale' => $this->locale ?? 'uz',
             'template' => $this->template ?? 'classic',
+            // Whether Premium features are on; when it ends stays private.
+            'premium' => $this->isPremium(),
             'posts_count' => $this->whenHas('posts_count'),
             'latest_post_at' => $this->whenHas('latest_post_at', fn () => $this->latest_post_at
                 ? date(DATE_ATOM, strtotime($this->latest_post_at))

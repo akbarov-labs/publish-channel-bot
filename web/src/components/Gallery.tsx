@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight } from "@/components/Icons";
+import { useLightbox } from "@/components/Lightbox";
 import type { PostMedium } from "@/lib/api";
 import { dict, type Locale } from "@/lib/i18n";
 
@@ -12,6 +13,7 @@ import { dict, type Locale } from "@/lib/i18n";
  */
 export default function Gallery({ items, label, locale }: { items: PostMedium[]; label: string; locale: Locale }) {
   const t = dict(locale);
+  const { open, element: lightbox } = useLightbox(locale);
   const trackRef = useRef<HTMLDivElement>(null);
   const thumbsRef = useRef<HTMLDivElement>(null);
   const [index, setIndex] = useState(0);
@@ -110,8 +112,10 @@ export default function Gallery({ items, label, locale }: { items: PostMedium[];
                   loading={position < 2 ? "eager" : "lazy"}
                   decoding="async"
                   draggable={false}
+                  data-fade="" suppressHydrationWarning
+                  onClick={() => open(item.url, t.photoOf(position + 1, count))}
                   onLoad={position === 0 ? (event) => measure(event.currentTarget) : undefined}
-                  className="h-full w-full object-contain"
+                  className="h-full w-full cursor-zoom-in object-contain"
                 />
               )}
             </div>
@@ -152,12 +156,13 @@ export default function Gallery({ items, label, locale }: { items: PostMedium[];
                 <span className="flex h-full w-full items-center justify-center text-xs text-muted">{t.video}</span>
               ) : (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={item.url} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" />
+                <img src={item.url} alt="" loading="lazy" decoding="async" data-fade="" suppressHydrationWarning className="h-full w-full object-cover" />
               )}
             </button>
           ))}
         </div>
       )}
+      {lightbox}
     </section>
   );
 }

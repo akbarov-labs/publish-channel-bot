@@ -102,3 +102,38 @@ export function Search(props: IconProps) {
     </Stroke>
   );
 }
+
+export function Pause(props: IconProps) {
+  return (
+    <Stroke {...props}>
+      <path d="M8 5v14" />
+      <path d="M16 5v14" />
+    </Stroke>
+  );
+}
+
+export function LinkIcon(props: IconProps) {
+  return (
+    <Stroke {...props}>
+      <path d="M10 13a5 5 0 0 0 7.07 0l3-3a5 5 0 0 0-7.07-7.07l-1.5 1.5" />
+      <path d="M14 11a5 5 0 0 0-7.07 0l-3 3a5 5 0 0 0 7.07 7.07l1.5-1.5" />
+    </Stroke>
+  );
+}
+
+export function Check(props: IconProps) {
+  return (
+    <Stroke {...props}>
+      <path d="m5 12.5 4.5 4.5L19 7.5" />
+    </Stroke>
+  );
+}
+
+export function Close(props: IconProps) {
+  return (
+    <Stroke {...props}>
+      <path d="M6 6l12 12" />
+      <path d="M18 6 6 18" />
+    </Stroke>
+  );
+}

@@ -1,7 +1,6 @@
 import { notFound } from "next/navigation";
 import Avatar from "@/components/Avatar";
 import Pagination, { pageFrom } from "@/components/Pagination";
-import { Pin } from "@/components/Icons";
 import PostList from "@/components/PostList";
 import { FeaturedPost } from "@/components/PostRow";
 import TopicList from "@/components/TopicList";
@@ -79,23 +78,11 @@ export default async function AuthorHome({ params, searchParams }: PageProps<"/s
           <>
             {featured && (
               <div className="border-t border-line pt-8">
-                <FeaturedPost
-                  post={featured}
-                  href={`/posts/${featured.slug}`}
-                  locale={locale}
-                  eyebrow={
-                    pinned ? (
-                      <>
-                        <Pin className="size-4" />
-                        {t.pinned}
-                      </>
-                    ) : undefined
-                  }
-                />
+                <FeaturedPost post={featured} href={`/posts/${featured.slug}`} locale={locale} pinned={Boolean(pinned)} />
               </div>
             )}
             {page > 1 && <h1 className="title pb-4 pt-10 text-xl">{t.olderPostsPage(page)}</h1>}
-            <PostList posts={rows} locale={locale} template={template} pinnedId={pinned?.id} />
+            <PostList posts={rows} locale={locale} template={template} pinnedId={pinned?.id} label={t.allPosts} />
             <Pagination page={posts.current_page} lastPage={posts.last_page} locale={locale} />
           </>
         )}

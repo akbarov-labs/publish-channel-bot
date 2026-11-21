@@ -59,7 +59,7 @@ export default async function TopicPage({ params, searchParams }: Props) {
         </h1>
         <p className="mt-2 text-sm text-muted tabular-nums">{t.topicPosts(posts.total)}</p>
       </header>
-      <PostList posts={posts.data} locale={locale} template={templateOf(author.template)} />
+      <PostList posts={posts.data} locale={locale} template={templateOf(author.template)} label={t.topicPosts(posts.total)} />
       <Pagination page={posts.current_page} lastPage={posts.last_page} locale={locale} basePath={topicHref(topic)} />
     </main>
   );

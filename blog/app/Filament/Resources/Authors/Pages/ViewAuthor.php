@@ -17,6 +17,7 @@ class ViewAuthor extends ViewRecord
         return [
             EditAction::make()->color('gray'),
             AuthorActions::setPassword(),
+            AuthorActions::grantPremium(),
             AuthorActions::unblock(),
             AuthorActions::block(),
         ];

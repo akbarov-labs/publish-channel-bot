@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Avatar from "@/components/Avatar";
-import { Photos, Play } from "@/components/Icons";
+import Highlight from "@/components/Highlight";
+import { Photos, Pin, Play } from "@/components/Icons";
 import type { PostSummary } from "@/lib/api";
 import { dict, formatDate, type Locale } from "@/lib/i18n";
 import { cleanExcerpt, coverOf, guessLang, photoCount, typeLabel } from "@/lib/text";
@@ -29,15 +30,38 @@ export function SmartLink({
   );
 }
 
-export function PostMeta({ post, locale, extra }: { post: PostSummary; locale: Locale; extra?: string }) {
-  const label = typeLabel(post, dict(locale));
-  const parts = [formatDate(post.published_at, locale), label, extra].filter(Boolean);
+/**
+ * Date · type or read time · extra. A pinned post leads with "Pinned" (muted,
+ * with the pin mark) instead of a label above its title.
+ */
+export function PostMeta({
+  post,
+  locale,
+  extra,
+  pinned = false,
+}: {
+  post: PostSummary;
+  locale: Locale;
+  extra?: string;
+  pinned?: boolean;
+}) {
+  const t = dict(locale);
+  // Articles say how long they take, so a two-line note and a long read differ.
+  const readTime =
+    post.post_type === "article" && post.reading_minutes && post.reading_minutes > 1 ? t.minutesRead(post.reading_minutes) : null;
+  const parts = [formatDate(post.published_at, locale), typeLabel(post, t) ?? readTime, extra].filter(Boolean);
 
   return (
     <p className="flex flex-wrap items-center gap-x-1.5 text-[0.8125rem] text-muted tabular-nums">
+      {pinned && (
+        <span className="flex items-center gap-x-1 font-medium text-ink-soft">
+          <Pin className="size-3.5" />
+          {t.pinned}
+        </span>
+      )}
       {parts.map((part, index) => (
         <span key={index} className="flex items-center gap-x-1.5">
-          {index > 0 && <span aria-hidden="true">·</span>}
+          {(index > 0 || pinned) && <span aria-hidden="true">·</span>}
           {index === 0 ? <time dateTime={post.published_at ?? undefined}>{part}</time> : part}
         </span>
       ))}
@@ -48,7 +72,7 @@ export function PostMeta({ post, locale, extra }: { post: PostSummary; locale: L
 function MediaBadge({ post }: { post: PostSummary }) {
   if (post.post_type === "gallery") {
     return (
-      <span className="absolute bottom-1.5 left-1.5 inline-flex items-center gap-1 rounded-full bg-black/65 px-1.5 py-0.5 text-[0.6875rem] font-medium text-white tabular-nums">
+      <span className="absolute bottom-1.5 left-1.5 inline-flex items-center gap-1 rounded-full bg-black/65 px-1.5 py-0.5 text-xs font-medium text-white tabular-nums">
         <Photos className="size-3.5" />
         {photoCount(post)}
       </span>
@@ -71,19 +95,22 @@ export function PostRow({
   showAuthor = false,
   authorHref,
   locale,
+  highlight,
 }: {
   post: PostSummary;
   href: string;
   showAuthor?: boolean;
   authorHref?: string;
   locale: Locale;
+  /** Search words to mark in the title and excerpt. */
+  highlight?: string[];
 }) {
   const excerpt = cleanExcerpt(post);
   const cover = coverOf(post);
   const lang = guessLang(`${post.title} ${excerpt ?? ""}`);
 
   return (
-    <article lang={lang} className="group relative flex gap-5 py-7 sm:gap-10">
+    <article lang={lang} className="press group relative flex gap-5 py-7 sm:gap-10">
       <div className="min-w-0 flex-1">
         {showAuthor && post.author && (
           <a
@@ -99,12 +126,12 @@ export function PostRow({
             href={href}
             className="after:absolute after:inset-0 after:content-[''] group-hover:underline group-hover:decoration-1 group-hover:underline-offset-4"
           >
-            {post.title}
+            <Highlight text={post.title} words={highlight} />
           </SmartLink>
         </h3>
         {excerpt && (
           <p className="mt-1.5 line-clamp-2 text-[0.9375rem] leading-relaxed text-muted sm:line-clamp-3 sm:text-base">
-            {excerpt}
+            <Highlight text={excerpt} words={highlight} />
           </p>
         )}
         <div className="mt-3">
@@ -114,7 +141,7 @@ export function PostRow({
       {cover && (
         <div className="relative mt-1 size-20 shrink-0 self-start overflow-hidden rounded-[4px] bg-surface sm:h-[108px] sm:w-40">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={cover} alt="" loading="lazy" decoding="async" className="absolute inset-0 h-full w-full object-cover" />
+          <img src={cover} alt="" loading="lazy" decoding="async" data-fade="" suppressHydrationWarning className="absolute inset-0 h-full w-full object-cover" />
           <MediaBadge post={post} />
         </div>
       )}
@@ -127,20 +154,20 @@ export function FeaturedPost({
   post,
   href,
   locale,
-  eyebrow,
+  pinned = false,
 }: {
   post: PostSummary;
   href: string;
   locale: Locale;
-  /** A short line above the title, such as "Pinned". */
-  eyebrow?: React.ReactNode;
+  /** Leads the meta line with "Pinned". */
+  pinned?: boolean;
 }) {
   const excerpt = cleanExcerpt(post);
   const cover = coverOf(post);
   const lang = guessLang(`${post.title} ${excerpt ?? ""}`);
 
   return (
-    <article lang={lang} className="group relative pb-10 pt-2">
+    <article lang={lang} className="press group relative pb-10 pt-2">
       {cover && (
         <div className="relative mb-6 overflow-hidden rounded-md bg-surface">
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -148,6 +175,7 @@ export function FeaturedPost({
             src={cover}
             alt=""
             fetchPriority="high"
+            data-fade="" suppressHydrationWarning
             className="aspect-[16/9] w-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.015]"
           />
           {post.post_type === "gallery" && (
@@ -157,9 +185,6 @@ export function FeaturedPost({
             </span>
           )}
         </div>
-      )}
-      {eyebrow && (
-        <p className="mb-2 inline-flex items-center gap-1.5 text-[0.8125rem] font-medium text-accent">{eyebrow}</p>
       )}
       <h2 className="title text-[1.625rem] leading-[1.2] sm:text-[2.125rem]">
         <SmartLink
@@ -175,7 +200,7 @@ export function FeaturedPost({
         </p>
       )}
       <div className="mt-4">
-        <PostMeta post={post} locale={locale} />
+        <PostMeta post={post} locale={locale} pinned={pinned} />
       </div>
     </article>
   );

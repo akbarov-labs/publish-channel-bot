@@ -30,7 +30,9 @@ export default async function AuthorLayout({ children, params }: LayoutProps<"/s
     <>
       <AuthorBar author={author} />
 
-      <div className="flex-1">{children}</div>
+      <div id="main" tabIndex={-1} className="flex-1 outline-none">
+        {children}
+      </div>
 
       <footer className="mt-20 border-t border-line">
         <div className="mx-auto flex max-w-[1120px] flex-col gap-2 px-4 py-8 text-sm text-muted sm:flex-row sm:items-center sm:justify-between sm:px-6">

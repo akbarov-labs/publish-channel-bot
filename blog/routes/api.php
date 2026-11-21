@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\BotConnectController;
 use App\Http\Controllers\Api\BotMediaController;
 use App\Http\Controllers\Api\BotPostController;
 use App\Http\Controllers\Api\PageRequestController;
+use App\Http\Controllers\Api\PremiumController;
 use App\Http\Controllers\Api\PublicPostController;
 use App\Http\Controllers\Api\TlsAskController;
 use Illuminate\Support\Facades\Route;
@@ -26,6 +27,8 @@ Route::prefix('telegram')->middleware('bot.auth')->group(function () {
 Route::prefix('internal')->middleware('internal.auth')->group(function () {
     Route::post('/page-requests', [PageRequestController::class, 'store']);
     Route::post('/connect', [BotConnectController::class, 'connect']);
+    Route::post('/premium/status', [PremiumController::class, 'status']);
+    Route::post('/premium/payments', [PremiumController::class, 'payment']);
 });
 
 // Asked by the edge Caddy before it gets a certificate for an author's host.

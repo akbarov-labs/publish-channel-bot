@@ -17,7 +17,7 @@ export default async function NotFound() {
   return (
     <>
       {author ? <AuthorBar author={author} /> : <SiteBar />}
-      <main className="mx-auto flex w-full max-w-[560px] flex-1 flex-col items-center justify-center px-4 py-24 text-center">
+      <main id="main" tabIndex={-1} className="mx-auto flex w-full max-w-[560px] outline-none flex-1 flex-col items-center justify-center px-4 py-24 text-center">
         <h1 className="title text-[2rem] leading-tight">{t.pageMissingTitle}</h1>
         <p className="mt-3 max-w-[42ch] text-muted">
           {author ? t.pageMissingAuthorText(author.name) : t.pageMissingText}

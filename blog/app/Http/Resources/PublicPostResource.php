@@ -35,6 +35,8 @@ class PublicPostResource extends JsonResource
             'telegraph_url' => $this->telegraph_url,
             'published_at' => $this->published_at?->toAtomString(),
             'pinned' => $this->pinned_at !== null,
+            // Listings carry no body, so the read time travels with every post.
+            'reading_minutes' => $this->readingMinutes(),
             'views' => (int) $this->views_count,
             'reactions' => $this->reactions ?? [],
             'poll' => $this->poll,
@@ -55,5 +57,14 @@ class PublicPostResource extends JsonResource
             ])->values()),
             'author' => new AuthorResource($this->whenLoaded('user')),
         ];
+    }
+
+    /** Minutes at 200 words a minute, the same rule as the reader site's post page. */
+    private function readingMinutes(): int
+    {
+        $text = trim((string) preg_replace('/\s+/u', ' ', html_entity_decode(strip_tags((string) preg_replace('~<[^>]+>~', ' $0 ', (string) $this->html)), ENT_QUOTES | ENT_HTML5, 'UTF-8')));
+        $words = $text === '' ? 0 : count(preg_split('/\s+/u', $text) ?: []);
+
+        return max(1, (int) round($words / 200));
     }
 }

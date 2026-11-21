@@ -8,19 +8,22 @@ import type { Dictionary } from "@/lib/i18n";
  */
 export default function PollView({ poll, telegramPost, t }: { poll: Poll; telegramPost?: string | null; t: Dictionary }) {
   const total = poll.total_votes;
+  const leading = total > 0 ? Math.max(...poll.options.map((option) => option.votes)) : -1;
 
   return (
-    <section aria-label={t.poll} className="rounded-md border border-line p-5 sm:p-6">
-      <p className="text-[0.8125rem] font-semibold uppercase tracking-[0.06em] text-muted">{t.poll}</p>
+    <section aria-label={t.poll} className="border-y border-line py-6">
+      <p className="text-[0.9375rem] font-semibold">{t.poll}</p>
       <ul className="mt-4 space-y-2.5">
         {poll.options.map((option, index) => {
           const share = total > 0 ? Math.round((option.votes / total) * 100) : null;
           return (
-            <li key={index} className="relative overflow-hidden rounded-md bg-surface px-4 py-3">
+            <li key={index} className="relative overflow-hidden rounded-[4px] bg-surface px-4 py-3">
               {share !== null && (
-                <span aria-hidden="true" className="absolute inset-y-0 left-0 bg-accent-soft" style={{ width: `${share}%` }} />
+                <span aria-hidden="true" className="poll-bar absolute inset-y-0 left-0" style={{ width: `${share}%` }} />
               )}
-              <span className="relative flex items-baseline justify-between gap-4 font-sans text-[0.9375rem]">
+              <span
+                className={`relative flex items-baseline justify-between gap-4 font-sans text-[0.9375rem] ${option.votes === leading ? "font-semibold" : ""}`}
+              >
                 <span>{option.text}</span>
                 {share !== null && <span className="shrink-0 text-muted tabular-nums">{share}%</span>}
               </span>

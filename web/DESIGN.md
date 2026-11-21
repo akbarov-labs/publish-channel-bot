@@ -18,6 +18,8 @@ colors:
   line-dark: "#2a2a27"
   accent-dark: "#4cc36a"
   on-accent-dark: "#0b1a0f"
+  initials-ink: "#2b2b28"
+  initials-ink-dark: "#e6e2da"
 typography:
   display:
     fontFamily: "Golos Text, ui-sans-serif, system-ui, sans-serif"
@@ -183,7 +185,7 @@ A near-monochrome paper-and-ink palette with one green, redefined token for toke
 - **Hairline** (line): every divider, the bottom border of bars, outline-pill borders, table rules and the prose link underline base.
 
 ### Named Rules
-**The One Green Rule.** Green means "follow" or "go" and nothing else. It never fills a surface, a badge or a heading, and an author home carries exactly one green pill (the bar's Follow); the channel handle in the profile block is a green text link, not a second pill.
+**The One Green Rule.** Green means "follow" or "go" and nothing else. (On the Magazine and Notebook designs an author can pick, that design's own accent, orange or ink-red, takes green's place everywhere green is allowed and nowhere else; the rule holds for whichever accent is in force.) It never fills a surface, a badge or a heading, and an author home carries exactly one green pill (the bar's Follow); the channel handle in the profile block is a green text link, not a second pill.
 
 **The Redefine-Don't-Invert Rule.** Dark mode re-declares every token under `prefers-color-scheme: dark` with its own tuned value; nothing is produced by filters or opacity flips, and the browser theme colour follows the same two page values.
 
@@ -217,14 +219,17 @@ A near-monochrome paper-and-ink palette with one green, redefined token for toke
 
 Single-column reading with fixed measures, centred, over a 16px phone gutter (24px from 640px). Bars and footers run to a 1120px container. The post page holds its header and body to 680px and lets the cover, album or video widen to 960px (edge to edge on phones, rounded inset from 640px). The author home is a 720px column: a centred profile block (96px avatar, name, serif bio, post count and handle), then a featured post, then hairline-divided rows. The root directory is a 1120px two-column grid from 1024px (feed plus a sticky 300px authors aside with a 64px column gap); on phones the authors become a horizontally swiped strip of 60px avatars above the feed.
 
-Vertical rhythm: feed rows 28px top and bottom, 20px (phone) or 40px text-to-thumbnail gap; page openings 48px on phones and 64px from 640px; author block and post-to-footer separations 64 to 80px. Breakpoints are 640px (type steps up, gutters widen, media rounds) and 1024px (root grid). Motion is short and functional: 150ms ease-out for colour, border and filter changes, 200ms for spoiler reveal, a 500ms 1.5% scale on the featured cover's hover; everything collapses under `prefers-reduced-motion`.
+Long reads (articles of 4 minutes or more) gain two aids: a table of contents (with three or more headings) and a 2px reading-progress hairline in ink that fills the author bar's bottom edge as the reader scrolls (scroll-driven CSS, no script, hidden where unsupported and under reduced motion). The end of a post is ordered for one clear next step: one band holding files, the channel's reactions, topics and the Instant View link; then **Up next** (the next part of the series, else the author's previous post); then the series' full list; then the author block, comments, and the newer/older strip.
+
+Vertical rhythm: feed rows 28px top and bottom, 20px (phone) or 40px text-to-thumbnail gap; page openings 48px on phones and 64px from 640px; author block and post-to-footer separations 64 to 80px. Breakpoints are 640px (type steps up, gutters widen, media rounds) and 1024px (root grid). Motion is short and functional, on one ease-out curve (cubic-bezier(0.22, 1, 0.36, 1)): 150ms for colour, border and filter changes; every row, card and neighbour link drops to 62% opacity while pressed, the only tap feedback a phone gets before the next page arrives; images fade in over 220ms as they load (switched on after hydration, so an image already shown never disappears, with a 3s reveal as a safety net); loading skeletons appear only if the wait passes 250ms, as still surface blocks, never shimmering; the footnote note and share menu rise 4px over 140 to 160ms; the lightbox opens from 98.5% over 200ms; the contents chevron turns over 200ms; spoilers reveal over 200ms; the featured cover scales 1.5% over 500ms on hover. Contents jumps scroll smoothly. Everything collapses under `prefers-reduced-motion`.
 
 ## Elevation & Depth
 
 Flat. Depth is carried by hairlines, the warm surface tone behind media, and the page colour itself; content never floats. Sticky bars are page-coloured with a hairline bottom border, not shadowed.
 
 ### Shadow Vocabulary
-- **Floating control** (`box-shadow: 0 2px 10px rgb(0 0 0 / 0.18)`): only the gallery's previous and next buttons, which sit over arbitrary photographs and need separation from them.
+- **Floating control** (`box-shadow: 0 2px 10px rgb(0 0 0 / 0.18)`): the gallery's previous and next buttons and the lightbox's close button, which sit over arbitrary photographs and need separation from them.
+- **Floating note** (`box-shadow: 0 6px 24px rgb(0 0 0 / 0.1)`): only the footnote note that opens over the text, so it reads as lifted off the page it covers.
 
 ### Named Rules
 **The Hairline Rule.** Rows, sections, bars and footers are separated by a 1px line in the line colour and by space, never by cards, fills or shadows.
@@ -245,6 +250,20 @@ Pills, small and quiet; they never compete with a title.
 - **Ink (page action):** ink fill with page-colour text, 40px; hover drops to 85% opacity. Used for the single exit action on a 404.
 - **Focus:** every interactive element shows a 2px green outline at 3px offset with a 4px radius.
 
+### Post-page modules
+Hairline-bounded blocks, never boxes; labels are sentence-case Golos 600 at body size, never uppercase or tracked.
+- **Series line:** under the byline, one muted meta line: the series title as an underlined link, then "Part n of m". The full list (numbered, current part bold) sits after the post.
+- **Contents:** a `<details>` between hairlines, open from 640px and folded on phones; links are muted and the section in view turns ink and semibold; jumps scroll smoothly and move focus.
+- **Poll:** a hairline block; each option a 4px-radius surface bar filled at the share of votes in accent mixed 24% into surface, the leading option semibold; "Vote in Telegram" in the accent pill.
+- **Reactions:** outlined counts (hairline pill, emoji and tabular count in soft ink). They are shown, not pressable: a reaction on the site could not reach the channel.
+- **Audio player:** a surface panel: a 44px ink play/pause circle, the track name, a 3px seek hairline that fills in ink with a 13px thumb, and tabular time. The native element still plays.
+- **Up next:** a section label over one post row (or, for a series part, the title, "Series · Part n of m" and an arrow that nudges 4px on hover).
+- **Lightbox:** tapping a cover, album photo or prose image opens it full screen in a native `<dialog>` over a 92% near-black backdrop; pinch-zoom works, Escape or a tap closes it.
+- **Heading links:** a 16px link mark beside each prose heading, visible on hover or focus (faint on touch screens), copying a link to that section with a check-mark confirmation.
+- **Footnote note:** a footnote number opens its note in a 300px serif note just below it (the floating-note shadow), instead of jumping away; without script the anchors still jump.
+- **Share menu:** phones get the native share sheet; elsewhere a hairline menu under the pill offers Share to Telegram and Copy link.
+- **Search hit:** matched words in results are tinted with the accent at 20%, 4px radius.
+
 ### Navigation
 - **Author bar:** sticky, 56px, page-coloured with a hairline bottom. Left: 30px avatar and the author's name (semibold, -0.01em); right: the Follow pill. It appears on every page of an author's space, including their 404.
 - **Site bar:** 56px, hairline bottom, the site name alone in bold sans (1.0625rem, -0.02em). Used on the root directory and the root 404.
@@ -255,13 +274,19 @@ Pills, small and quiet; they never compete with a title.
 The feed's only unit. Text left, an optional thumbnail right (80px square on phones, 160 by 108px from 640px, 4px radius, surface ground). Optional author byline (20px avatar plus name, label size) above a balanced title, a muted two- or three-line excerpt, then the meta line. The whole row is one link target; hovering underlines the title. Gallery and video thumbnails carry a small black-at-65% pill badge with a stroke icon and photo count.
 
 ### Featured Post
-The newest post on an author home: a 16:9 cover at 6px radius, a Title Featured heading, a three-line serif excerpt in soft ink, and the meta line. Hover underlines the title at 2px and nudges the cover to 101.5%.
+The newest post on an author home (or the pinned one): a 16:9 cover at 6px radius, a Title Featured heading, a three-line serif excerpt in soft ink, and the meta line. Hover underlines the title at 2px and nudges the cover to 101.5%. A pinned post says so in its meta line ("Pinned" with a pin mark, in soft ink), never in a label above the title.
+
+### Designs an author can pick
+Set in Profile → Site design; each redefines the tokens (light and dark) through `data-template` on `<html>` and lists posts its own way.
+- **Classic:** this document as written.
+- **Magazine:** orange accent (#c2410c, #fb8a4c at night), titles at 800 weight and -0.03em; posts as two-column cards with a 3:2 picture on top. A post without a picture shows its opening words in the serif on surface, or simply sits shorter; never a coloured placeholder.
+- **Notebook:** warm paper (#fbf8f1, #17140f at night), ink-red accent (#9b2c2c, #e58b7d at night), serif titles at 600; rows with the date in a left margin and no pictures; the pinned post heads the list.
 
 ### Gallery (signature)
 A Telegram album in its original order. The frame takes the first photo's shape, clamped between 4:5 and 16:9 and to 78% of the viewport height, on the surface ground. Phones swipe a native scroll-snap track; from 640px, 44px floating arrow buttons appear and the arrow keys move between photos. A black-at-65% "n / m" counter sits top right. Below, a strip of 56px (64px from 640px) thumbnails at 4px radius: the active one carries a 2px ink ring offset 2px from the page; inactive ones stay at full opacity but are dimmed to 88% brightness and 55% saturation, returning to full colour on hover.
 
 ### Avatar
-Always a circle on the surface ground. Without a photo it shows initials in semibold dark ink (#2b2b28, 38% of the avatar size) on one of six muted grounds chosen stably from the username: sand #e9dccb, mist #d3e1ea, sage #d9e6d2, mauve #e7d6e2, straw #e8e2c6, lavender #d8dbe9. Sizes in use: 20, 30, 40, 44, 60, 64 and 96px.
+Always a circle on the surface ground. Without a photo it shows initials in semibold dark ink (#2b2b28, 38% of the avatar size) on one of six muted grounds chosen stably from the username: sand #e9dccb, mist #d3e1ea, sage #d9e6d2, mauve #e7d6e2, straw #e8e2c6, lavender #d8dbe9. At night each ground has its own deep value of the same hue (#3a3125, #24303a, #28332a, #372a34, #35311f, #2a2d3b) with initials in #e6e2da, so no avatar glows on the dark page. Sizes in use: 20, 30, 40, 44, 60, 64 and 96px.
 
 ### Author Invitation (root domain)
 The root domain's pitch to channel owners, shown only when the bot's username is configured. While there are fewer than three authors it opens the page in place of the reader hero: a Display heading at 16ch and a serif lede on the left, and on the right (below, on phones) the **address specimen**: a muted "Your page's address" label over `yourchannel.<root host>` at 1.625 to 2rem bold, with the name in ink, the root host in muted, and the system's green caret blinking between them (steady under reduced motion). Then come one Follow-style green pill, "Request a page" (it opens the bot), and a muted note saying that authors are added by hand. After the feed, a "What you get" definition list (hairline rows, a 240px semibold term and soft-ink text up to 880px) and a "How it works" three-column ordered list (muted tabular step number, semibold title, soft-ink text, hairline above each) close with the same pill. Once the directory is full, all of this shrinks to a hairline-topped strip above the footer (a title, one line of text and the pill), and the site bar gains a quiet muted "For authors" link to it. It makes no claims about authors, numbers or testimonials.
@@ -292,3 +317,6 @@ The article body, rendered from author HTML. Links inherit the text colour with 
 - **Don't** fade inactive gallery thumbnails with opacity.
 - **Don't** let the platform's name or branding appear in an author's bar or profile block; it lives in the footer line.
 - **Don't** invent author names, follower counts, view counts or testimonials on shipped pages.
+- **Don't** put a label above a heading (an eyebrow); status such as "Pinned" or "Series" lives in the meta line.
+- **Don't** box a post-page module in a filled or bordered card; use hairlines above and below.
+- **Don't** let an image depend on script to be seen: fades and other loading effects must leave the image visible if the script never runs.
