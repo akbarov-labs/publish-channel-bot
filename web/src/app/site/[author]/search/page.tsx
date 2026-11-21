@@ -74,7 +74,13 @@ export default async function SearchPage({ params, searchParams }: Props) {
             {t.searchResults(results.total, q)}
           </p>
           <div className="mt-3">
-            <PostList posts={results.data} locale={locale} template={templateOf(author.template)} />
+            <PostList
+              posts={results.data}
+              locale={locale}
+              template={templateOf(author.template)}
+              label={t.searchResults(results.total, q)}
+              highlight={q.split(/\s+/)}
+            />
           </div>
           <Pagination
             page={results.current_page}

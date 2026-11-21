@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Golos_Text, Literata } from "next/font/google";
 import localFont from "next/font/local";
+import ImageFade from "@/components/ImageFade";
 import LocaleProvider from "@/components/LocaleProvider";
 import { defaultLocale, dict } from "@/lib/i18n";
 import { requestLocale, requestTemplate } from "@/lib/request";
@@ -48,6 +49,7 @@ export const metadata: Metadata = {
   alternates: { types: { "application/rss+xml": [{ url: `${rootUrl().origin}/feed.xml`, title: SITE_NAME }] } },
 };
 
+
 export const viewport: Viewport = {
   themeColor: [
     { media: "(prefers-color-scheme: light)", color: "#ffffff" },
@@ -63,6 +65,13 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang={locale} data-template={template} className={`${golos.variable} ${literata.variable} ${literataOkina.variable} antialiased`}>
       <body className="flex min-h-dvh flex-col bg-bg text-ink">
+        <ImageFade />
+        <a
+          href="#main"
+          className="sr-only z-50 rounded-full bg-ink px-4 py-2 text-[0.9375rem] font-medium text-bg focus:not-sr-only focus:fixed focus:left-4 focus:top-3"
+        >
+          {dict(locale).skipToContent}
+        </a>
         <LocaleProvider locale={locale}>{children}</LocaleProvider>
       </body>
     </html>

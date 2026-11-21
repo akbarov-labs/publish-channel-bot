@@ -43,15 +43,29 @@ export function withoutLeadingTitle(html: string, title: string): string {
   return match[2].toLowerCase().startsWith("<br") ? `<p>${rest.replace(/^\s*/, "")}` : rest;
 }
 
-/** The excerpt minus a repeated title, or null when nothing is left. */
+const HASHTAG = String.raw`#[\p{L}\p{M}\p{N}_ʻʼ]+`;
+
+/**
+ * The excerpt as a listing should show it: no repeated title, no footnotes
+ * ("[^1]" markers or their notes), no runs of hashtags (topics show those),
+ * and no doubled full stops left behind by any of them. Null when nothing is
+ * left.
+ */
 export function cleanExcerpt(post: Pick<PostSummary, "excerpt" | "title">): string | null {
   if (!post.excerpt) return null;
-  // Footnote markers ("[^1]") mean nothing out of the post.
-  const excerpt = post.excerpt.replace(/\[\^[^\]\s]{1,20}\]:?/g, "").replace(/\s{2,}/g, " ").trim();
+  let text = post.excerpt
+    .replace(/\s*\[\^[^\]\s]{1,20}\]:[\s\S]*$/, "")
+    .replace(/\[\^[^\]\s]{1,20}\]/g, "")
+    .replace(new RegExp(String.raw`(^|\s)(?:${HASHTAG}\s*)+(?=[.!?…]|$)`, "gu"), "$1")
+    .replace(/([.!?…])\s+\.(?=\s|$)/g, "$1")
+    .replace(/(^|[^.])\.\.(?!\.)/g, "$1.")
+    .replace(/\s+([.,;:!?…])/g, "$1")
+    .replace(/\s{2,}/g, " ")
+    .trim();
   const title = post.title.trim();
   // The API ends each block with a full stop, so the title leaves one behind.
-  const rest = excerpt.startsWith(title) ? excerpt.slice(title.length).replace(/^[.:;!?…\s]+/, "") : excerpt;
-  return rest.length > 0 ? rest : null;
+  if (text.startsWith(title)) text = text.slice(title.length).replace(/^[.:;!?…\s]+/, "");
+  return text.length > 0 ? text : null;
 }
 
 export function photoCount(post: Pick<PostSummary, "media">): number {

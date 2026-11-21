@@ -53,13 +53,13 @@ export default async function Home({ searchParams }: PageProps<"/">) {
     <>
       <SiteBar>
         {bot && !inviting && (
-          <a href="#join" className="text-[0.875rem] font-medium text-muted transition-colors duration-150 ease-out hover:text-ink">
+          <a href="#join" className="text-[0.8125rem] font-medium text-muted transition-colors duration-150 ease-out hover:text-ink">
             {t.forAuthors}
           </a>
         )}
       </SiteBar>
 
-      <main className="mx-auto w-full max-w-[1120px] flex-1 px-4 sm:px-6">
+      <main id="main" tabIndex={-1} className="mx-auto w-full max-w-[1120px] flex-1 px-4 outline-none sm:px-6">
         {page === 1 && inviting && <AuthorLanding bot={bot} locale={locale} />}
 
         {page === 1 && !inviting && (

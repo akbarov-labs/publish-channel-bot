@@ -146,6 +146,18 @@ export type Dictionary = {
   pollVotes: (count: number) => string;
   voteInTelegram: string;
   draftPreview: string;
+  skipToContent: string;
+  upNext: string;
+  copyLink: string;
+  shareToTelegram: string;
+  linkToSection: string;
+  startReading: string;
+  closeImage: string;
+  openImage: string;
+  play: string;
+  pause: string;
+  seek: string;
+  note: string;
 };
 
 const uz: Dictionary = {
@@ -269,6 +281,18 @@ const uz: Dictionary = {
   pollVotes: (count) => plural("uz", count, { one: "# ovoz", other: "# ovoz" }),
   voteInTelegram: "Telegramda ovoz berish",
   draftPreview: "Qoralama. Uni faqat shu havolaga ega odamlar koʻradi.",
+  skipToContent: "Asosiy matnga oʻtish",
+  upNext: "Keyingisi",
+  copyLink: "Havolani nusxalash",
+  shareToTelegram: "Telegramda ulashish",
+  linkToSection: "Shu boʻlimga havola",
+  startReading: "Oʻqishni boshlash",
+  closeImage: "Yopish",
+  openImage: "Rasmni kattalashtirish",
+  play: "Ijro etish",
+  pause: "Pauza",
+  seek: "Oʻtkazish",
+  note: "Izoh",
 };
 
 const ru: Dictionary = {
@@ -392,6 +416,18 @@ const ru: Dictionary = {
   pollVotes: (count) => plural("ru", count, { one: "# голос", few: "# голоса", many: "# голосов", other: "# голоса" }),
   voteInTelegram: "Голосовать в Telegram",
   draftPreview: "Черновик. Его видят только те, у кого есть эта ссылка.",
+  skipToContent: "Перейти к тексту",
+  upNext: "Читать дальше",
+  copyLink: "Скопировать ссылку",
+  shareToTelegram: "Поделиться в Telegram",
+  linkToSection: "Ссылка на этот раздел",
+  startReading: "Начать читать",
+  closeImage: "Закрыть",
+  openImage: "Открыть изображение",
+  play: "Воспроизвести",
+  pause: "Пауза",
+  seek: "Перемотка",
+  note: "Примечание",
 };
 
 const en: Dictionary = {
@@ -515,6 +551,18 @@ const en: Dictionary = {
   pollVotes: (count) => plural("en", count, { one: "# vote", other: "# votes" }),
   voteInTelegram: "Vote in Telegram",
   draftPreview: "Draft. Only people with this link can see it.",
+  skipToContent: "Skip to content",
+  upNext: "Up next",
+  copyLink: "Copy link",
+  shareToTelegram: "Share to Telegram",
+  linkToSection: "Link to this section",
+  startReading: "Start reading",
+  closeImage: "Close",
+  openImage: "Open image",
+  play: "Play",
+  pause: "Pause",
+  seek: "Seek",
+  note: "Note",
 };
 
 const DICTIONARIES: Record<Locale, Dictionary> = { uz, ru, en };

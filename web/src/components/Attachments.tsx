@@ -1,6 +1,7 @@
+import AudioPlayer from "@/components/AudioPlayer";
 import { ExternalLink } from "@/components/Icons";
 import type { PostMedium } from "@/lib/api";
-import type { Dictionary } from "@/lib/i18n";
+import type { Dictionary, Locale } from "@/lib/i18n";
 
 function fileName(url: string): string {
   try {
@@ -11,7 +12,7 @@ function fileName(url: string): string {
 }
 
 /** Audio tracks get a player each; other files are listed for download. */
-export default function Attachments({ media, t }: { media: PostMedium[]; t: Dictionary }) {
+export default function Attachments({ media, t, locale }: { media: PostMedium[]; t: Dictionary; locale: Locale }) {
   const audio = media.filter((item) => item.type === "audio");
   const files = media.filter((item) => item.type === "document");
   if (audio.length === 0 && files.length === 0) return null;
@@ -21,9 +22,8 @@ export default function Attachments({ media, t }: { media: PostMedium[]; t: Dict
       {audio.length > 0 && (
         <ul aria-label={t.audio} className="space-y-3">
           {audio.map((item) => (
-            <li key={item.id} className="rounded-md bg-surface p-3">
-              <p className="mb-2 truncate px-1 text-[0.8125rem] text-muted">{fileName(item.url)}</p>
-              <audio controls preload="metadata" src={item.url} className="w-full" />
+            <li key={item.id}>
+              <AudioPlayer src={item.url} title={fileName(item.url)} locale={locale} />
             </li>
           ))}
         </ul>

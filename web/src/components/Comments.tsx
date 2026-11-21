@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ExternalLink } from "@/components/Icons";
 import { dict, type Locale } from "@/lib/i18n";
 
@@ -13,6 +13,21 @@ export default function Comments({ post, locale }: { post: string; locale: Local
   const t = dict(locale);
   const box = useRef<HTMLDivElement>(null);
   const [shown, setShown] = useState(false);
+  const [loaded, setLoaded] = useState(false);
+
+  // Quiet placeholder lines until Telegram's frame arrives.
+  useEffect(() => {
+    const element = box.current;
+    if (!shown || !element) return;
+    const observer = new MutationObserver(() => {
+      if (element.querySelector("iframe")) {
+        setLoaded(true);
+        observer.disconnect();
+      }
+    });
+    observer.observe(element, { childList: true, subtree: true });
+    return () => observer.disconnect();
+  }, [shown]);
 
   const show = () => {
     if (shown || !box.current) return;
@@ -22,7 +37,9 @@ export default function Comments({ post, locale }: { post: string; locale: Local
     script.src = "https://telegram.org/js/telegram-widget.js?22";
     script.dataset.telegramDiscussion = post;
     script.dataset.commentsLimit = "10";
-    script.dataset.color = "1a7f37";
+    // The widget takes the design's own accent (green, orange or red).
+    const accent = getComputedStyle(document.documentElement).getPropertyValue("--accent").trim().replace("#", "");
+    script.dataset.color = /^[0-9a-f]{6}$/i.test(accent) ? accent : "1a7f37";
     if (window.matchMedia("(prefers-color-scheme: dark)").matches) script.dataset.dark = "1";
     box.current.appendChild(script);
   };
@@ -47,12 +64,19 @@ export default function Comments({ post, locale }: { post: string; locale: Local
         <button
           type="button"
           onClick={show}
-          className="mt-4 inline-flex h-10 items-center rounded-full border border-line px-4 text-[0.9375rem] font-medium transition-colors hover:border-ink"
+          className="mt-4 inline-flex h-10 items-center rounded-full border border-line px-4 text-[0.9375rem] font-medium transition-[border-color,transform] duration-150 ease-out hover:border-ink active:scale-[0.98]"
         >
           {t.showComments}
         </button>
       )}
-      <div ref={box} className="mt-4 min-h-0" />
+      {shown && !loaded && (
+        <div aria-hidden="true" className="mt-5 space-y-3">
+          <div className="h-3 w-2/3 rounded-full bg-surface" />
+          <div className="h-3 w-5/6 rounded-full bg-surface" />
+          <div className="h-3 w-1/2 rounded-full bg-surface" />
+        </div>
+      )}
+      <div ref={box} className="mt-4 min-h-0" aria-busy={shown && !loaded} />
     </section>
   );
 }
