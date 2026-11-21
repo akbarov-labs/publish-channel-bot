@@ -22,6 +22,11 @@ class AuthenticateBot
             return response()->json(['message' => 'Unauthenticated.'], 401);
         }
 
+        // The admin blocked this author: their channel no longer reaches the blog.
+        if ($author->isBlocked()) {
+            return response()->json(['message' => 'This author is blocked.'], 403);
+        }
+
         $request->setUserResolver(fn () => $author);
 
         return $next($request);

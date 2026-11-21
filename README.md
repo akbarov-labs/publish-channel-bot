@@ -135,6 +135,21 @@ docker compose run --rm bot python -c \
 
 `/status` reports what is connected; `/deactivate` pauses a channel.
 
+## Managing authors
+
+The admin account (the oldest one, `is_admin`) has **Authors**: every account
+with its page, channel, post counts and last post. An author's page lists all
+their posts, drafts included, read-only. From the list or the page:
+
+- **Set new password**, for an author who forgot theirs (the admin has no
+  "forgot password" email). The form suggests one to copy and send them; their
+  other sessions are signed out.
+- **Edit**: name, email, username (their subdomain) and site language.
+- **Block**: they are signed out and cannot sign in, their bot gets 403s so
+  channel posts stop arriving, their scheduled posts are not announced, and
+  their page, posts and feeds leave the reader site. Nothing is deleted;
+  **Unblock** brings it all back. The admin account itself cannot be blocked.
+
 ## Tests
 
 The images leave tests out, so they are mounted in:

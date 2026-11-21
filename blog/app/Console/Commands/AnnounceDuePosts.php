@@ -23,6 +23,8 @@ class AnnounceDuePosts extends Command
             ->where('announce_pending', true)
             ->where('status', 'published')
             ->where('published_at', '<=', now())
+            // A blocked author's posts wait; they go out if the author is unblocked.
+            ->whereHas('user', fn ($author) => $author->active())
             ->get();
 
         foreach ($due as $post) {

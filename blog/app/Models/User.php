@@ -5,6 +5,7 @@ namespace App\Models;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
@@ -71,6 +72,7 @@ class User extends Authenticatable implements FilamentUser
             'password' => 'hashed',
             'webhook_secret' => 'encrypted',
             'is_admin' => 'boolean',
+            'blocked_at' => 'datetime',
         ];
     }
 
@@ -84,12 +86,38 @@ class User extends Authenticatable implements FilamentUser
     }
 
     /**
+     * Set by the admin from Authors, never by a form: a blocked author cannot
+     * sign in, their bot is refused and their space is off the reader site.
+     */
+    public function isBlocked(): bool
+    {
+        return $this->blocked_at !== null;
+    }
+
+    public function block(): void
+    {
+        $this->forceFill(['blocked_at' => now(), 'remember_token' => null])->save();
+    }
+
+    public function unblock(): void
+    {
+        $this->forceFill(['blocked_at' => null])->save();
+    }
+
+    /** Authors who are not blocked. */
+    public function scopeActive(Builder $query): void
+    {
+        $query->whereNull('blocked_at');
+    }
+
+    /**
      * Every registered user is an author of this blog, so all of them may open
-     * the admin. Tighten this if the blog ever gains non-author accounts.
+     * the admin unless the admin has blocked them. Filament checks this at
+     * sign-in and on every request, so a block also ends an open session.
      */
     public function canAccessPanel(Panel $panel): bool
     {
-        return true;
+        return ! $this->isBlocked();
     }
 
     public function posts(): HasMany
