@@ -16,6 +16,7 @@ export async function generateMetadata({ params }: LayoutProps<"/site/[author]">
     title: { absolute: author.name, template: `%s — ${author.name}` },
     description: author.bio ?? undefined,
     metadataBase: new URL(authorUrl(author.username)),
+    alternates: { types: { "application/rss+xml": [{ url: "/feed.xml", title: author.name }] } },
     openGraph: { siteName: author.name, images: author.avatar_url ? [author.avatar_url] : undefined },
   };
 }
@@ -36,9 +37,14 @@ export default async function AuthorLayout({ children, params }: LayoutProps<"/s
           <span>
             © {new Date().getFullYear()} {author.name}
           </span>
-          <a href={rootUrl().origin} className="hover:text-ink hover:underline hover:underline-offset-4">
-            {t.publishedOn(SITE_NAME)}
-          </a>
+          <span className="flex items-center gap-5">
+            <a href="/feed.xml" className="hover:text-ink hover:underline hover:underline-offset-4">
+              RSS
+            </a>
+            <a href={rootUrl().origin} className="hover:text-ink hover:underline hover:underline-offset-4">
+              {t.publishedOn(SITE_NAME)}
+            </a>
+          </span>
         </div>
       </footer>
     </>

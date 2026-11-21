@@ -14,6 +14,9 @@ Route::prefix('telegram')->middleware('bot.auth')->group(function () {
     Route::get('/ping', [BotPostController::class, 'ping']);
     Route::post('/posts', [BotPostController::class, 'store']);
     Route::patch('/posts/{post}', [BotPostController::class, 'update']);
+    Route::post('/posts/{post}/pin', [BotPostController::class, 'pin']);
+    Route::put('/posts/{post}/channel-message', [BotPostController::class, 'channelMessage']);
+    Route::put('/posts/{post}/reactions', [BotPostController::class, 'reactions']);
     Route::post('/media', [BotMediaController::class, 'store']);
     Route::put('/webhook', [BotConnectController::class, 'webhook']);
 });
@@ -35,5 +38,12 @@ Route::prefix('public')->group(function () {
     Route::get('/authors', [PublicPostController::class, 'authors']);
     Route::get('/authors/{username}', [PublicPostController::class, 'author']);
     Route::get('/authors/{username}/posts', [PublicPostController::class, 'authorPosts']);
+    Route::get('/authors/{username}/preview/{token}', [PublicPostController::class, 'preview']);
+    Route::get('/authors/{username}/sitemap', [PublicPostController::class, 'sitemap']);
+    Route::get('/authors/{username}/topics', [PublicPostController::class, 'topics']);
+    Route::get('/authors/{username}/series/{slug}', [PublicPostController::class, 'series']);
     Route::get('/authors/{username}/posts/{slug}', [PublicPostController::class, 'show']);
+    // One reader is one view a minute per post at most; the site passes their address.
+    Route::post('/authors/{username}/posts/{slug}/view', [PublicPostController::class, 'view'])
+        ->middleware('throttle:views');
 });

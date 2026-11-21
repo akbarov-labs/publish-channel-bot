@@ -78,6 +78,15 @@ class StubSiteClient:
     async def update_post(self, post_id: str, **kwargs: Any) -> None:
         self.created.append({"update": post_id, **kwargs})
 
+    async def pin_post(self, post_id: str) -> None:
+        self.created.append({"pin": post_id})
+
+    async def set_channel_message(self, post_id: str, message_id: int) -> None:
+        self.created.append({"channel_message": post_id, "message_id": message_id})
+
+    async def set_reactions(self, post_id: str, reactions: list[dict[str, Any]]) -> None:
+        self.created.append({"reactions": post_id, "counts": reactions})
+
 
 @dataclass
 class StubOrigin:
@@ -99,6 +108,10 @@ class StubMessage:
     video: Any = None
     document: Any = None
     animation: Any = None
+    audio: Any = None
+    voice: Any = None
+    poll: Any = None
+    pinned_message: Any = None
     date: Any = None
     media_group_id: str | None = None
     forward_origin: Any = None

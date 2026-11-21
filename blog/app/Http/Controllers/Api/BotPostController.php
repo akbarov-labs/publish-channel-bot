@@ -29,12 +29,21 @@ class BotPostController extends Controller
             'external_id' => ['required', 'string', 'max:255'],
             'title' => ['required', 'string', 'max:255'],
             'html' => ['nullable', 'string'],
-            'post_type' => ['nullable', 'string', 'in:article,gallery,video'],
+            'post_type' => ['nullable', 'string', 'in:article,gallery,video,audio,poll'],
             'telegraph_url' => ['nullable', 'url', 'max:255'],
             'published_at' => ['nullable', 'date'],
             'media' => ['array'],
             'media.*.url' => ['required', 'url'],
-            'media.*.type' => ['required', 'string', 'in:photo,video,document'],
+            'media.*.type' => ['required', 'string', 'in:photo,video,document,audio'],
+            'poll' => ['nullable', 'array'],
+            'poll.question' => ['required_with:poll', 'string', 'max:300'],
+            'poll.options' => ['required_with:poll', 'array', 'min:1', 'max:12'],
+            'poll.options.*.text' => ['required', 'string', 'max:200'],
+            'poll.options.*.votes' => ['nullable', 'integer', 'min:0'],
+            'poll.total_votes' => ['nullable', 'integer', 'min:0'],
+            'poll.closed' => ['nullable', 'boolean'],
+            'poll.multiple' => ['nullable', 'boolean'],
+            'poll.quiz' => ['nullable', 'boolean'],
         ]);
 
         $author = $request->user();
@@ -58,6 +67,18 @@ class BotPostController extends Controller
             'telegraph_url' => $data['telegraph_url'] ?? null,
             'cover_image' => collect($media)->firstWhere('type', 'photo')['url'] ?? null,
             'published_at' => $data['published_at'] ?? now(),
+            'poll' => isset($data['poll']) ? [
+                'question' => $data['poll']['question'],
+                'options' => array_map(fn (array $option) => [
+                    'text' => $option['text'],
+                    'votes' => (int) ($option['votes'] ?? 0),
+                ], $data['poll']['options']),
+                'total_votes' => (int) ($data['poll']['total_votes'] ?? 0),
+                'closed' => (bool) ($data['poll']['closed'] ?? false),
+                'multiple' => (bool) ($data['poll']['multiple'] ?? false),
+                'quiz' => (bool) ($data['poll']['quiz'] ?? false),
+            ] : null,
+            'telegram_message_id' => preg_match('/^tg:-?\d+:(\d+)$/', $data['external_id'], $match) ? (int) $match[1] : null,
         ]);
 
         foreach (array_values($media) as $position => $item) {
@@ -88,5 +109,49 @@ class BotPostController extends Controller
         ]);
 
         return response()->json(['id' => (string) $post->id, 'url' => $post->url()]);
+    }
+
+    /** The channel pinned this post's message: pin it on the site too. */
+    public function pin(Request $request, Post $post): JsonResponse
+    {
+        abort_unless($post->user_id === $request->user()->id, 404);
+
+        $post->update(['pinned_at' => now()]);
+
+        return response()->json(['id' => (string) $post->id, 'pinned' => true]);
+    }
+
+    /** Where the bot announced a post written in the admin, for comments and links. */
+    public function channelMessage(Request $request, Post $post): JsonResponse
+    {
+        abort_unless($post->user_id === $request->user()->id, 404);
+
+        $data = $request->validate(['message_id' => ['required', 'integer', 'min:1']]);
+        $post->forceFill(['telegram_message_id' => $data['message_id']])->saveQuietly();
+
+        return response()->json(['id' => (string) $post->id]);
+    }
+
+    /** The channel's reaction counts for this post, replacing the last ones. */
+    public function reactions(Request $request, Post $post): JsonResponse
+    {
+        abort_unless($post->user_id === $request->user()->id, 404);
+
+        $data = $request->validate([
+            'reactions' => ['present', 'array', 'max:20'],
+            'reactions.*.emoji' => ['required', 'string', 'max:16'],
+            'reactions.*.count' => ['required', 'integer', 'min:0'],
+        ]);
+
+        $reactions = collect($data['reactions'])
+            ->filter(fn (array $reaction) => $reaction['count'] > 0)
+            ->sortByDesc('count')
+            ->map(fn (array $reaction) => ['emoji' => $reaction['emoji'], 'count' => (int) $reaction['count']])
+            ->values()
+            ->all();
+
+        $post->forceFill(['reactions' => $reactions])->saveQuietly();
+
+        return response()->json(['id' => (string) $post->id, 'reactions' => $reactions]);
     }
 }

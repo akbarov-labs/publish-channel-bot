@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\AuthorResource;
 use App\Http\Resources\PublicPostResource;
 use App\Models\Post;
+use App\Models\Series;
+use App\Models\Tag;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
@@ -48,14 +50,104 @@ class PublicPostController extends Controller
     public function authorPosts(Request $request, string $username): JsonResponse
     {
         $author = User::where('username', $username)->firstOrFail();
+        $topic = $request->string('topic')->trim()->value();
+        $terms = $request->string('q')->trim()->limit(100, '')->value();
+
+        if ($topic !== '' && ! $author->tags()->where('slug', Tag::slugFor($topic))->exists()) {
+            abort(404);
+        }
 
         $posts = $author->posts()
             ->visible()
-            ->with('media')
+            ->with(['media', 'tags'])
+            ->when($topic !== '', fn (Builder $query) => $query->whereHas('tags', fn (Builder $tags) => $tags->where('slug', Tag::slugFor($topic))))
+            ->when($terms !== '', fn (Builder $query) => $query->search($terms))
             ->latest('published_at')
             ->paginate($this->perPage($request));
 
-        return $this->paginated($posts);
+        // The RSS feed asks for bodies so readers can read whole posts in their app.
+        $response = $this->paginated($posts, withBody: $request->boolean('with_body'));
+
+        // The front page shows the pinned post above the rest.
+        if ($posts->currentPage() === 1 && $topic === '' && $terms === '') {
+            $pinned = $author->posts()->visible()->whereNotNull('pinned_at')->with('media')->first();
+            $response->setData([
+                ...$response->getData(true),
+                'pinned' => $pinned ? (new PublicPostResource($pinned))->resolve() : null,
+            ]);
+        }
+
+        return $response;
+    }
+
+    /**
+     * A reader opened the post. Only the reader site calls this (Caddy keeps
+     * /api/public from the outside), passing the reader's address on.
+     */
+    public function view(string $username, string $slug): JsonResponse
+    {
+        $author = User::where('username', $username)->firstOrFail();
+        $post = $author->posts()->visible()->where('slug', $slug)->firstOrFail();
+
+        $post->recordView();
+
+        return response()->json(['views' => (int) $post->fresh()->views_count]);
+    }
+
+    /** A series and its visible parts, in reading order. */
+    public function series(string $username, string $slug): JsonResponse
+    {
+        $author = User::where('username', $username)->firstOrFail();
+        $series = $author->series()->where('slug', $slug)->firstOrFail();
+
+        $parts = $series->visibleParts()->with(['media', 'tags'])->get();
+        abort_if($parts->isEmpty(), 404);
+
+        return response()->json([
+            'title' => $series->title,
+            'slug' => $series->slug,
+            'description' => $series->description,
+            'posts' => PublicPostResource::collection($parts)->resolve(),
+        ]);
+    }
+
+    /** An author's topics that have posts, the busiest first. */
+    public function topics(string $username): JsonResponse
+    {
+        $author = User::where('username', $username)->firstOrFail();
+
+        $topics = $author->tags()
+            ->whereHas('posts', fn (Builder $query) => $query->visible())
+            ->withCount(['posts' => fn (Builder $query) => $query->visible()])
+            ->orderByDesc('posts_count')
+            ->orderBy('name')
+            ->get();
+
+        return response()->json([
+            'data' => $topics->map(fn (Tag $tag) => [
+                'name' => $tag->name,
+                'slug' => $tag->slug,
+                'posts_count' => $tag->posts_count,
+            ])->values(),
+        ]);
+    }
+
+    /** Every visible post's address and last change, for the author's sitemap. */
+    public function sitemap(string $username): JsonResponse
+    {
+        $author = User::where('username', $username)->firstOrFail();
+
+        $posts = $author->posts()
+            ->visible()
+            ->latest('published_at')
+            ->get(['slug', 'published_at', 'updated_at']);
+
+        return response()->json([
+            'data' => $posts->map(fn (Post $post) => [
+                'slug' => $post->slug,
+                'updated_at' => ($post->updated_at ?? $post->published_at)?->toAtomString(),
+            ])->values(),
+        ]);
     }
 
     /** One post, with the author and the neighbouring posts for "read next". */
@@ -66,34 +158,78 @@ class PublicPostController extends Controller
         $post = $author->posts()
             ->visible()
             ->where('slug', $slug)
-            ->with('media')
+            ->with(['media', 'tags'])
             ->firstOrFail()
             ->setRelation('user', $author);
 
+        return response()->json($this->postPayload($post, $author, withNeighbours: true));
+    }
+
+    /**
+     * A post through its secret preview link, whatever its status. The site
+     * marks the page as a preview and keeps it out of search engines.
+     */
+    public function preview(string $username, string $token): JsonResponse
+    {
+        abort_if(strlen($token) < 32, 404);
+
+        $author = $this->authorsWithStats()->where('username', $username)->firstOrFail();
+
+        $post = $author->posts()
+            ->where('preview_token', $token)
+            ->with(['media', 'tags'])
+            ->firstOrFail()
+            ->setRelation('user', $author);
+
+        return response()->json([
+            ...$this->postPayload($post, $author, withNeighbours: false),
+            'preview' => true,
+        ]);
+    }
+
+    /** @return array<string, mixed> */
+    private function postPayload(Post $post, User $author, bool $withNeighbours): array
+    {
         $neighbour = fn (string $operator, string $direction) => $author->posts()
             ->visible()
             ->where('published_at', $operator, $post->published_at)
             ->orderBy('published_at', $direction)
-            ->with('media')
+            ->with(['media', 'tags'])
             ->first();
 
-        $more = $author->posts()
+        $older = $withNeighbours ? $neighbour('<', 'desc') : null;
+        $newer = $withNeighbours ? $neighbour('>', 'asc') : null;
+
+        $more = $withNeighbours ? $author->posts()
             ->visible()
             ->whereKeyNot($post->id)
             ->latest('published_at')
             ->with('media')
             ->limit(3)
-            ->get();
+            ->get() : collect();
 
-        $older = $neighbour('<', 'desc');
-        $newer = $neighbour('>', 'asc');
+        $series = $post->series_id ? $author->series()->find($post->series_id) : null;
 
-        return response()->json([
+        return [
             ...(new PublicPostResource($post, withBody: true))->resolve(),
+            'series' => $series ? $this->seriesSummary($series) : null,
             'older' => $older ? (new PublicPostResource($older))->resolve() : null,
             'newer' => $newer ? (new PublicPostResource($newer))->resolve() : null,
             'more' => PublicPostResource::collection($more)->resolve(),
-        ]);
+        ];
+    }
+
+    /** @return array{title: string, slug: string, parts: list<array{title: string, slug: string}>} */
+    private function seriesSummary(Series $series): array
+    {
+        return [
+            'title' => $series->title,
+            'slug' => $series->slug,
+            'parts' => $series->visibleParts()->get(['title', 'slug'])
+                ->map(fn (Post $part) => ['title' => $part->title, 'slug' => $part->slug])
+                ->values()
+                ->all(),
+        ];
     }
 
     private function authorsWithStats(): Builder
@@ -109,10 +245,12 @@ class PublicPostController extends Controller
         return max(1, min((int) $request->integer('per_page', 12), 50));
     }
 
-    private function paginated(LengthAwarePaginator $posts): JsonResponse
+    private function paginated(LengthAwarePaginator $posts, bool $withBody = false): JsonResponse
     {
         return response()->json([
-            'data' => PublicPostResource::collection($posts->getCollection())->resolve(),
+            'data' => $posts->getCollection()
+                ->map(fn (Post $post) => (new PublicPostResource($post, $withBody))->resolve())
+                ->values(),
             'current_page' => $posts->currentPage(),
             'last_page' => $posts->lastPage(),
             'total' => $posts->total(),

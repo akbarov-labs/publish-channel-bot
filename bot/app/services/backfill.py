@@ -52,7 +52,7 @@ class ImportError_(RuntimeError):
 
 
 def _is_media(message: Message) -> bool:
-    return bool(message.photo or message.video or message.document or message.animation)
+    return bool(message.photo or message.video or message.document or message.animation or message.audio)
 
 
 def _same_album(first: HistoricalMessage, second: HistoricalMessage) -> bool:

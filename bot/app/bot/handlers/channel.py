@@ -6,13 +6,18 @@ import html
 import logging
 
 from aiogram import Bot, F, Router
-from aiogram.types import ChatMemberUpdated, Message
+from aiogram.types import ChatMemberUpdated, Message, MessageReactionCountUpdated
 
 from app.db import repo
 from app.db.models import WaitingChannel
 from app.db.session import session_scope
 from app.services.site_client import SiteError
-from app.services.sync import channel_edit_to_site, channel_post_to_site
+from app.services.sync import (
+    channel_edit_to_site,
+    channel_pin_to_site,
+    channel_post_to_site,
+    channel_reactions_to_site,
+)
 
 log = logging.getLogger(__name__)
 router = Router(name="channel")
@@ -99,6 +104,19 @@ async def on_channel_command(message: Message, bot: Bot) -> None:
     await bot.send_message(message.chat.id, note)
 
 
+@router.channel_post(F.pinned_message)
+async def on_channel_pin(message: Message) -> None:
+    """A pinned message in the channel pins its post on the site."""
+    async with session_scope() as session:
+        channel = await repo.get_channel(session, message.chat.id)
+        if channel is None or message.pinned_message is None:
+            return
+        try:
+            await channel_pin_to_site(session, channel, message.pinned_message.message_id)
+        except SiteError as exc:
+            log.error("channel %s pin -> site failed: %s", message.chat.id, exc)
+
+
 @router.channel_post()
 async def on_channel_post(message: Message, bot: Bot, album: list[Message] | None = None) -> None:
     messages = album or [message]
@@ -110,6 +128,32 @@ async def on_channel_post(message: Message, bot: Bot, album: list[Message] | Non
             await channel_post_to_site(session, bot, channel, messages)
         except SiteError as exc:
             log.error("channel %s -> site failed: %s", message.chat.id, exc)
+
+
+def reaction_counts(event: MessageReactionCountUpdated) -> list[dict[str, object]]:
+    """Emoji and paid (⭐) reactions as the site stores them. Custom emoji
+    are images only Telegram can draw, so they are left out."""
+    counts: list[dict[str, object]] = []
+    for reaction in event.reactions:
+        kind = reaction.type
+        if kind.type == "emoji":
+            counts.append({"emoji": kind.emoji, "count": reaction.total_count})
+        elif kind.type == "paid":
+            counts.append({"emoji": "⭐", "count": reaction.total_count})
+    return counts
+
+
+@router.message_reaction_count()
+async def on_reaction_count(event: MessageReactionCountUpdated) -> None:
+    """Channels report anonymous reaction totals; the site shows them."""
+    async with session_scope() as session:
+        channel = await repo.get_channel(session, event.chat.id)
+        if channel is None:
+            return
+        try:
+            await channel_reactions_to_site(session, channel, event.message_id, reaction_counts(event))
+        except SiteError as exc:
+            log.error("channel %s reactions -> site failed: %s", event.chat.id, exc)
 
 
 @router.edited_channel_post()

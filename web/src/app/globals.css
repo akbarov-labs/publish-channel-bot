@@ -306,3 +306,99 @@ body {
     scroll-behavior: auto !important;
   }
 }
+
+/* Footnotes: [^1] in a post becomes a small linked number, notes at the end. */
+.prose-post .footnote-ref {
+  font-family: var(--font-sans);
+  font-size: 0.7em;
+  line-height: 0;
+  margin-left: 0.1em;
+}
+
+.prose-post .footnote-ref a {
+  text-decoration: none;
+  color: var(--accent);
+  padding: 0 0.15em;
+}
+
+.prose-post .footnotes {
+  margin-top: 3em;
+  font-size: 0.85em;
+  color: var(--ink-soft);
+}
+
+.prose-post .footnotes hr {
+  width: 4rem;
+  margin: 0 0 1.5em;
+  border: 0;
+  border-top: 1px solid var(--line);
+}
+
+.prose-post .footnotes li:target,
+.prose-post .footnote-ref:target a {
+  background: var(--accent-soft);
+}
+
+.prose-post .footnote-back {
+  text-decoration: none;
+}
+
+/* Headings are jump targets from the contents; keep them clear of the sticky bar. */
+.prose-post :is(h2, h3, h4)[id] {
+  scroll-margin-top: 5rem;
+}
+
+/* ---- Templates an author can pick: data-template on <html>. ---- */
+
+/* Magazine: image-led, a warm orange accent, heavier titles. */
+[data-template="magazine"] {
+  --accent: #c2410c;
+  --accent-soft: #fdeee6;
+  --on-accent: #ffffff;
+}
+
+@media (prefers-color-scheme: dark) {
+  [data-template="magazine"] {
+    --accent: #fb8a4c;
+    --accent-soft: #33190d;
+    --on-accent: #1f0d04;
+  }
+}
+
+[data-template="magazine"] .title {
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+/* Notebook: text first, on warm paper, with serif titles and an ink-red accent. */
+[data-template="notebook"] {
+  --bg: #fbf8f1;
+  --surface: #f3eee2;
+  --ink: #2a2420;
+  --ink-soft: #4a413a;
+  --muted: #74695e;
+  --line: #e6ddcc;
+  --accent: #9b2c2c;
+  --accent-soft: #f6e3df;
+  --on-accent: #ffffff;
+}
+
+@media (prefers-color-scheme: dark) {
+  [data-template="notebook"] {
+    --bg: #17140f;
+    --surface: #211d17;
+    --ink: #ede6da;
+    --ink-soft: #d3c9b9;
+    --muted: #a3988a;
+    --line: #2e2820;
+    --accent: #e58b7d;
+    --accent-soft: #3a201c;
+    --on-accent: #1c0f0c;
+  }
+}
+
+[data-template="notebook"] .title {
+  font-family: var(--font-serif);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}

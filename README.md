@@ -36,6 +36,26 @@ View** and can read the whole piece without leaving Telegram.
 Edits to a channel post are mirrored onto the blog. Deletions are not — the
 Telegram Bot API does not report them.
 
+### What a post can do
+
+| Feature | Where it comes from | Notes |
+| --- | --- | --- |
+| **Scheduled posts** | "Publish at" a future time in the admin | Hidden until then; `posts:announce-due` (the blog's scheduler process, every minute) announces it in the channel. |
+| **Pinned post** | Pin in the admin, or pin the message in the channel | One per author; leads the front page. Telegram reports pins, not unpins. |
+| **Topics** | Hashtags in a post (`#travel`), or the admin's Topics field | Pages at `/topics/<name>`, chips on posts, the busiest on the front page. |
+| **Search** | The search button in the author's bar | `/search?q=`: every word, in titles and text. |
+| **Series** | Series in the admin, then a post's Series field | "Part 2 of 5" on each part; `/series/<slug>`. |
+| **Contents and footnotes** | The body | Contents once a post has three headings; `[^1]` markers with `[^1]: note` paragraphs become linked notes. |
+| **Views** | Counted on the site | Once per reader per visit, capped per address, kept per day. The Bot API cannot read a channel post's own views. |
+| **Reactions** | The channel's reaction totals (`message_reaction_count`) | Emoji and paid stars; custom emoji are left out. |
+| **Comments** | The channel's discussion group | Telegram's widget, loaded only when the reader asks; public channels only. |
+| **Audio, voice notes, files** | Channel posts, or the admin's Media section | A player per track; files listed for download. |
+| **Polls** | Channel polls | Question, options and the votes at arrival (the Bot API reports later votes only on the bot's own polls), with a link to vote. |
+| **Draft previews** | Preview on the post's edit page | A secret link showing the post as readers will; never indexed. "New preview link" retires the old one. |
+| **Stats** | The admin dashboard | Views over 30 days against the 30 before, a daily chart, the most read posts. |
+| **RSS and sitemap** | Every author's space | `/feed.xml` (full posts) and `/sitemap.xml`; the root domain has a feed of everyone's latest. |
+| **Site design** | Profile → Site design | Classic, Magazine (cards, pictures first) or Notebook (serif, words first). |
+
 ### Keeping posts from bouncing
 
 Both directions running at once is a loop waiting to happen. Three guards stop

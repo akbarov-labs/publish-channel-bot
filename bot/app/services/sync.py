@@ -93,12 +93,43 @@ def _plain_text(messages: Iterable[Message]) -> str:
 
 def _post_type(messages: list[Message]) -> str:
     """An album of two or more photos becomes a carousel post on the blog."""
+    if any(message.poll for message in messages):
+        return "poll"
     photos = [message for message in messages if message.photo]
     if len(photos) >= 2:
         return "gallery"
     if any(message.video for message in messages):
         return "video"
+    if any(message.audio or message.voice for message in messages):
+        return "audio"
     return "article"
+
+
+def _poll(messages: Iterable[Message]) -> dict[str, Any] | None:
+    """A channel poll as the site shows it. Counts are a snapshot: the Bot API
+    only reports later votes on polls the bot sent itself."""
+    for message in messages:
+        poll = message.poll
+        if poll:
+            return {
+                "question": poll.question,
+                "options": [{"text": option.text, "votes": option.voter_count} for option in poll.options],
+                "total_votes": poll.total_voter_count,
+                "closed": bool(poll.is_closed),
+                "multiple": bool(poll.allows_multiple_answers),
+                "quiz": poll.type == "quiz",
+            }
+    return None
+
+
+def _audio_title(messages: Iterable[Message]) -> str | None:
+    """A track's own name, for an audio post with no caption."""
+    for message in messages:
+        audio = message.audio
+        if audio and (audio.title or audio.file_name):
+            name = audio.title or audio.file_name
+            return f"{audio.performer} — {name}" if audio.performer else name
+    return None
 
 
 def _message_html(messages: Iterable[Message]) -> str:
@@ -142,6 +173,24 @@ async def _upload_media(bot: Bot, client: SiteClient, messages: Iterable[Message
                 video.file_size,
                 video.file_name or f"{video.file_unique_id}.mp4",
                 video.mime_type or "video/mp4",
+            )
+        elif message.audio:
+            audio = message.audio
+            spec = (
+                "audio",
+                audio.file_id,
+                audio.file_size,
+                audio.file_name or f"{audio.file_unique_id}.mp3",
+                audio.mime_type or "audio/mpeg",
+            )
+        elif message.voice:
+            voice = message.voice
+            spec = (
+                "audio",
+                voice.file_id,
+                voice.file_size,
+                f"{voice.file_unique_id}.ogg",
+                voice.mime_type or "audio/ogg",
             )
         elif message.document:
             doc = message.document
@@ -192,13 +241,15 @@ async def channel_post_to_site(
         return None  # already synced, or we published it ourselves
 
     html = _message_html(messages)
-    if not html and not any(m.photo or m.video or m.document for m in messages):
-        return None  # nothing publishable (service message, poll, sticker...)
+    poll = _poll(messages)
+    if not html and not poll and not any(m.photo or m.video or m.document or m.audio or m.voice for m in messages):
+        return None  # nothing publishable (service message, sticker...)
 
     site = await session.get(Site, channel.site_id)
     client = site_client_for(site)
     media = await _upload_media(bot, client, messages)
-    title = derive_title(html, fallback=channel.title or "Channel post")
+    fallback = (poll or {}).get("question") or _audio_title(messages) or channel.title or "Channel post"
+    title = derive_title(html, fallback=fallback)
     body = telegram_html_to_article(html)
 
     # A telegra.ph link carries the real article; the message is just a teaser.
@@ -219,6 +270,7 @@ async def channel_post_to_site(
         published_at=published_at.isoformat() if published_at else None,
         post_type=_post_type(messages),
         telegraph_url=telegraph_url,
+        poll=poll,
     )
     link = PostLink(
         channel_id=channel.id,
@@ -248,6 +300,36 @@ async def channel_edit_to_site(session: AsyncSession, channel: Channel, message:
     await site_client_for(site).update_post(link.site_post_id, title=title, html=body)
     link.content_hash = digest
     await session.flush()
+    return True
+
+
+async def channel_pin_to_site(session: AsyncSession, channel: Channel, pinned_message_id: int) -> bool:
+    """A message pinned in the channel pins its post on the author's page.
+
+    Telegram reports pins but not unpins, so the site keeps the last pin until
+    another post is pinned, here or in the admin.
+    """
+    if not channel.active:
+        return False
+    link = await link_for_message(session, channel.id, pinned_message_id)
+    if not link or not link.site_post_id:
+        return False
+    site = await session.get(Site, channel.site_id)
+    await site_client_for(site).pin_post(link.site_post_id)
+    return True
+
+
+async def channel_reactions_to_site(
+    session: AsyncSession, channel: Channel, message_id: int, reactions: list[dict[str, Any]]
+) -> bool:
+    """The reaction counts on a channel post, mirrored onto its page."""
+    if not channel.active:
+        return False
+    link = await link_for_message(session, channel.id, message_id)
+    if not link or not link.site_post_id:
+        return False
+    site = await session.get(Site, channel.site_id)
+    await site_client_for(site).set_reactions(link.site_post_id, reactions)
     return True
 
 
@@ -290,6 +372,14 @@ async def site_post_to_channel(
         )
 
     recently_sent.add(channel.telegram_chat_id, sent.message_id)
+
+    # The site links to the post in the channel and shows its comments there.
+    # Best effort: the announcement is out either way.
+    try:
+        await site_client_for(effective_site).set_channel_message(site_post_id, sent.message_id)
+    except SiteError as exc:
+        log.warning("could not tell the site where post %s was announced: %s", site_post_id, exc)
+
     link = PostLink(
         channel_id=channel.id,
         tg_message_id=sent.message_id,
@@ -306,6 +396,8 @@ async def site_post_to_channel(
 __all__ = [
     "SiteError",
     "channel_edit_to_site",
+    "channel_pin_to_site",
+    "channel_reactions_to_site",
     "channel_post_to_site",
     "link_for_message",
     "link_for_post",

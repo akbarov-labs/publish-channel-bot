@@ -1,9 +1,13 @@
 import { notFound } from "next/navigation";
 import Avatar from "@/components/Avatar";
 import Pagination, { pageFrom } from "@/components/Pagination";
-import { FeaturedPost, PostRow } from "@/components/PostRow";
-import { getAuthor, getAuthorPosts } from "@/lib/api";
+import { Pin } from "@/components/Icons";
+import PostList from "@/components/PostList";
+import { FeaturedPost } from "@/components/PostRow";
+import TopicList from "@/components/TopicList";
+import { getAuthor, getAuthorPosts, getAuthorTopics } from "@/lib/api";
 import { dict, localeOf } from "@/lib/i18n";
+import { templateOf } from "@/lib/templates";
 import { guessLang } from "@/lib/text";
 
 function channelHandle(url: string): string {
@@ -14,14 +18,24 @@ function channelHandle(url: string): string {
 export default async function AuthorHome({ params, searchParams }: PageProps<"/site/[author]">) {
   const { author: username } = await params;
   const page = pageFrom((await searchParams).page);
-  const [author, posts] = await Promise.all([getAuthor(username), getAuthorPosts(username, page)]);
+  const [author, posts, topics] = await Promise.all([
+    getAuthor(username),
+    getAuthorPosts(username, page),
+    page === 1 ? getAuthorTopics(username) : Promise.resolve([]),
+  ]);
   if (!author || !posts) notFound();
   const locale = localeOf(author.locale);
   const t = dict(locale);
 
-  const [first, ...rest] = posts.data;
-  const featured = page === 1 ? first : undefined;
-  const rows = featured ? rest : posts.data;
+  const template = templateOf(author.template);
+
+  // Page one leads with the pinned post when there is one, else the newest.
+  // Notebook features nothing: the pinned post simply heads the list.
+  const pinned = page === 1 ? (posts.pinned ?? undefined) : undefined;
+  const listed = pinned ? posts.data.filter((post) => post.id !== pinned.id) : posts.data;
+  const featured = page === 1 && template !== "notebook" ? (pinned ?? listed[0]) : undefined;
+  const rows =
+    template === "notebook" ? (pinned ? [pinned, ...listed] : listed) : featured && !pinned ? listed.slice(1) : listed;
 
   return (
     <main>
@@ -47,10 +61,13 @@ export default async function AuthorHome({ params, searchParams }: PageProps<"/s
               </>
             )}
           </p>
+          {topics.length > 0 && (
+            <TopicList topics={topics.slice(0, 12)} label={t.topics} className="mt-7 flex justify-center [&_ul]:justify-center" />
+          )}
         </section>
       )}
 
-      <div className="mx-auto max-w-[720px] px-4">
+      <div className={`mx-auto px-4 ${template === "magazine" ? "max-w-[1040px] sm:px-6" : "max-w-[720px]"}`}>
         {posts.data.length === 0 ? (
           <div className="border-t border-line py-16 text-center">
             <h2 className="title text-xl">{t.noPostsTitle}</h2>
@@ -62,15 +79,23 @@ export default async function AuthorHome({ params, searchParams }: PageProps<"/s
           <>
             {featured && (
               <div className="border-t border-line pt-8">
-                <FeaturedPost post={featured} href={`/posts/${featured.slug}`} locale={locale} />
+                <FeaturedPost
+                  post={featured}
+                  href={`/posts/${featured.slug}`}
+                  locale={locale}
+                  eyebrow={
+                    pinned ? (
+                      <>
+                        <Pin className="size-4" />
+                        {t.pinned}
+                      </>
+                    ) : undefined
+                  }
+                />
               </div>
             )}
-            {page > 1 && <h1 className="title pt-10 text-xl">{t.olderPostsPage(page)}</h1>}
-            <div className="divide-y divide-line border-t border-line">
-              {rows.map((post) => (
-                <PostRow key={post.id} post={post} href={`/posts/${post.slug}`} locale={locale} />
-              ))}
-            </div>
+            {page > 1 && <h1 className="title pb-4 pt-10 text-xl">{t.olderPostsPage(page)}</h1>}
+            <PostList posts={rows} locale={locale} template={template} pinnedId={pinned?.id} />
             <Pagination page={posts.current_page} lastPage={posts.last_page} locale={locale} />
           </>
         )}

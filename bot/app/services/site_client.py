@@ -64,6 +64,7 @@ class SiteClient:
         published_at: str | None = None,
         post_type: str = "article",
         telegraph_url: str | None = None,
+        poll: dict[str, Any] | None = None,
     ) -> CreatedPost:
         payload = {
             "source": "telegram",
@@ -75,6 +76,8 @@ class SiteClient:
             "post_type": post_type,
             "telegraph_url": telegraph_url,
         }
+        if poll is not None:
+            payload["poll"] = poll
         data = await self._request("POST", "/posts", json=payload)
         if "id" not in data or "url" not in data:
             raise SiteError("POST /posts must return {\"id\": ..., \"url\": ...}")
@@ -84,6 +87,18 @@ class SiteClient:
         await self._request(
             "PATCH", f"/posts/{post_id}", json={"source": "telegram", "title": title, "html": html}
         )
+
+    async def pin_post(self, post_id: str) -> None:
+        """The channel pinned this post's message; the site pins it too."""
+        await self._request("POST", f"/posts/{post_id}/pin")
+
+    async def set_channel_message(self, post_id: str, message_id: int) -> None:
+        """Where an admin post was announced, so the site can link to it."""
+        await self._request("PUT", f"/posts/{post_id}/channel-message", json={"message_id": message_id})
+
+    async def set_reactions(self, post_id: str, reactions: list[dict[str, Any]]) -> None:
+        """The channel's reaction counts for a post, replacing the last ones."""
+        await self._request("PUT", f"/posts/{post_id}/reactions", json={"reactions": reactions})
 
     async def upload_media(self, filename: str, content: bytes, content_type: str) -> str:
         data = await self._request(

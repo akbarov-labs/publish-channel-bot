@@ -46,7 +46,8 @@ export function withoutLeadingTitle(html: string, title: string): string {
 /** The excerpt minus a repeated title, or null when nothing is left. */
 export function cleanExcerpt(post: Pick<PostSummary, "excerpt" | "title">): string | null {
   if (!post.excerpt) return null;
-  const excerpt = post.excerpt.trim();
+  // Footnote markers ("[^1]") mean nothing out of the post.
+  const excerpt = post.excerpt.replace(/\[\^[^\]\s]{1,20}\]:?/g, "").replace(/\s{2,}/g, " ").trim();
   const title = post.title.trim();
   // The API ends each block with a full stop, so the title leaves one behind.
   const rest = excerpt.startsWith(title) ? excerpt.slice(title.length).replace(/^[.:;!?…\s]+/, "") : excerpt;
@@ -61,6 +62,8 @@ export function photoCount(post: Pick<PostSummary, "media">): number {
 export function typeLabel(post: Pick<PostSummary, "post_type" | "media">, t: Dictionary): string | null {
   if (post.post_type === "gallery") return t.photos(photoCount(post));
   if (post.post_type === "video") return t.video;
+  if (post.post_type === "audio") return t.audio;
+  if (post.post_type === "poll") return t.poll;
   return null;
 }
 

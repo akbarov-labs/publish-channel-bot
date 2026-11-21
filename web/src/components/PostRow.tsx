@@ -122,8 +122,19 @@ export function PostRow({
   );
 }
 
-/** The newest post on an author's front page, given room to breathe. */
-export function FeaturedPost({ post, href, locale }: { post: PostSummary; href: string; locale: Locale }) {
+/** The newest (or the pinned) post on an author's front page, given room to breathe. */
+export function FeaturedPost({
+  post,
+  href,
+  locale,
+  eyebrow,
+}: {
+  post: PostSummary;
+  href: string;
+  locale: Locale;
+  /** A short line above the title, such as "Pinned". */
+  eyebrow?: React.ReactNode;
+}) {
   const excerpt = cleanExcerpt(post);
   const cover = coverOf(post);
   const lang = guessLang(`${post.title} ${excerpt ?? ""}`);
@@ -146,6 +157,9 @@ export function FeaturedPost({ post, href, locale }: { post: PostSummary; href: 
             </span>
           )}
         </div>
+      )}
+      {eyebrow && (
+        <p className="mb-2 inline-flex items-center gap-1.5 text-[0.8125rem] font-medium text-accent">{eyebrow}</p>
       )}
       <h2 className="title text-[1.625rem] leading-[1.2] sm:text-[2.125rem]">
         <SmartLink

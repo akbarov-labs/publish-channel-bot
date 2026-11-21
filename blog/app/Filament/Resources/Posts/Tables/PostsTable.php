@@ -33,10 +33,22 @@ class PostsTable
                         'gray' => Post::TYPE_ARTICLE,
                         'info' => Post::TYPE_GALLERY,
                         'warning' => Post::TYPE_VIDEO,
+                        'success' => Post::TYPE_AUDIO,
+                        'primary' => Post::TYPE_POLL,
                     ]),
                 TextColumn::make('status')
                     ->badge()
-                    ->colors(['success' => 'published', 'gray' => 'draft']),
+                    ->formatStateUsing(fn (string $state, Post $record): string => $record->isScheduled() ? 'scheduled' : $state)
+                    ->color(fn (string $state, Post $record): string => match (true) {
+                        $record->isScheduled() => 'warning',
+                        $state === 'published' => 'success',
+                        default => 'gray',
+                    }),
+                IconColumn::make('pinned_at')
+                    ->label('Pinned')
+                    ->icon(fn ($state) => $state ? 'heroicon-s-bookmark' : null)
+                    ->color('primary')
+                    ->toggleable(),
                 TextColumn::make('source')
                     ->badge()
                     ->colors(['primary' => Post::SOURCE_TELEGRAM, 'gray' => Post::SOURCE_WEB]),
@@ -62,6 +74,8 @@ class PostsTable
                         Post::TYPE_ARTICLE => 'Article',
                         Post::TYPE_GALLERY => 'Gallery',
                         Post::TYPE_VIDEO => 'Video',
+                        Post::TYPE_AUDIO => 'Audio',
+                        Post::TYPE_POLL => 'Poll',
                     ]),
                 SelectFilter::make('source')
                     ->options([Post::SOURCE_WEB => 'Written here', Post::SOURCE_TELEGRAM => 'From Telegram']),
@@ -71,7 +85,12 @@ class PostsTable
                     ->label('View')
                     ->icon('heroicon-o-arrow-top-right-on-square')
                     ->url(fn (Post $record): string => $record->url(), shouldOpenInNewTab: true)
-                    ->visible(fn (Post $record): bool => $record->isPublished()),
+                    ->visible(fn (Post $record): bool => $record->isPublished() && ! $record->isScheduled()),
+                Action::make('pin')
+                    ->label(fn (Post $record): string => $record->pinned_at ? 'Unpin' : 'Pin')
+                    ->icon('heroicon-o-bookmark')
+                    ->color('gray')
+                    ->action(fn (Post $record) => $record->update(['pinned_at' => $record->pinned_at ? null : now()])),
                 EditAction::make(),
             ])
             ->toolbarActions([
