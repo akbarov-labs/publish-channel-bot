@@ -69,6 +69,15 @@ class PageRequest extends Model
         return $request;
     }
 
+    /** The author made for this Telegram account, if one was. */
+    public static function authorFor(int $telegramUserId): ?User
+    {
+        return static::where('telegram_user_id', $telegramUserId)
+            ->whereNotNull('user_id')
+            ->first()
+            ?->user;
+    }
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
