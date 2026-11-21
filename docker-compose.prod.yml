@@ -119,6 +119,11 @@ services:
       # Production and staging blogs both answer Caddy's certificate question
       # (pcb-tls-ask below); each passes the other's hosts to the other.
       TLS_ASK_PEER_URL: http://pcb-tls-ask-staging/api/tls/allowed
+      # Premium authors' own domains: on once the edge Caddy sends unknown
+      # hosts here (DEPLOY.md, "Authors' own domains"). The IP is what a bare
+      # domain's A record points to; authors see it in their profile.
+      CUSTOM_DOMAINS_ENABLED: ${CUSTOM_DOMAINS_ENABLED:-}
+      CUSTOM_DOMAIN_IP: ${CUSTOM_DOMAIN_IP:-}
       # Lets the bot record page requests (/api/internal/*). Unset, those
       # routes answer 404 and requests reach the admin only in Telegram.
       BOT_INTERNAL_SECRET: ${BOT_INTERNAL_SECRET:-}

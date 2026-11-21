@@ -18,6 +18,8 @@ export type Author = {
   locale?: string;
   /** The design the author picked: classic, magazine or notebook. */
   template?: string;
+  /** Their own domain while it is live (Premium); site_url is already on it. */
+  custom_domain?: string | null;
   posts_count?: number;
   latest_post_at?: string | null;
 };

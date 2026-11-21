@@ -1,6 +1,6 @@
 import { getAuthor, getAuthorFeed } from "@/lib/api";
 import { rss } from "@/lib/feed";
-import { authorUrl } from "@/lib/hosts";
+import { authorHome } from "@/lib/hosts";
 import { dict, localeOf } from "@/lib/i18n";
 
 // Built per request from the blog (and the host): nothing to prerender at build
@@ -18,8 +18,8 @@ export async function GET(_request: Request, { params }: RouteContext<"/site/[au
   return rss({
     title: author.name,
     description: author.bio ?? dict(locale).siteDescription,
-    link: authorUrl(author.username),
-    self: authorUrl(author.username, "/feed.xml"),
+    link: authorHome(author),
+    self: authorHome(author, "/feed.xml"),
     language: locale,
     image: author.avatar_url,
     items: posts.data.map((post) => ({ ...post, authorName: author.name })),

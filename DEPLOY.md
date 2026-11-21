@@ -213,6 +213,45 @@ request, **Message** and **Dismiss**. Other authors never see it. The bot
 reaches the blog over the stack's own network, and Caddy refuses
 `/api/internal/*` from outside.
 
+### Authors' own domains (optional, production only)
+
+With Premium an author can serve their space at a domain of their own,
+like `blog.aziza.uz`. Nobody knows those hosts in advance, so the edge Caddy
+needs one block that catches every host no other site on the server
+claims, with on-demand TLS. The blog's ask answer (step 2) allows only an
+author's verified domain, so strangers' hosts still get no certificate.
+Only one stack on the server can have this block, so staging has no own
+domains.
+
+1. In `~/edge/Caddyfile`, after the global block, add:
+
+   ```caddyfile
+   # Authors' own domains (publish-channel-bot Premium, see its DEPLOY.md).
+   # Sites with a host of their own are more specific and keep their blocks.
+   https:// {
+       tls {
+           on_demand
+       }
+       reverse_proxy publish-channel-bot-web-1:3000
+   }
+   ```
+
+   Validate, swap in and recreate exactly as in step 2, and read the log.
+   Then check an unrelated site on the box still answers.
+2. In production's `.env`, set `CUSTOM_DOMAINS_ENABLED=true` and
+   `CUSTOM_DOMAIN_IP=169.58.243.86`, then recreate the containers as in
+   [Changing `.env` on the server](#changing-env-on-the-server).
+
+Authors then get **Your own domain** in Profile. They add a CNAME to
+`DOMAIN` (or an A record to the IP, for a bare domain) and press **Check
+DNS**, and their subdomain starts sending readers there. Post links, feeds
+and channel announcements switch to the new address. When Premium ends,
+the domain sends readers back to the subdomain. Its certificate stays
+allowed so that redirect works over https. Nothing is deleted.
+
+Rollback: remove the block (as in step 2) and unset `CUSTOM_DOMAINS_ENABLED`.
+Own domains then stop, and every author is back on their subdomain.
+
 ### 10. Off-site backups
 
 Add to `/etc/offsite-backup/sources` (`sudo nano`), then

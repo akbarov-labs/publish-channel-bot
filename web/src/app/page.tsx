@@ -4,7 +4,7 @@ import Pagination, { pageFrom } from "@/components/Pagination";
 import { PostRow } from "@/components/PostRow";
 import SiteBar from "@/components/SiteBar";
 import { getAuthors, getLatestPosts, type Author } from "@/lib/api";
-import { authorUrl } from "@/lib/hosts";
+import { authorHome } from "@/lib/hosts";
 import { BOT_USERNAME, SITE_NAME } from "@/lib/site";
 import { defaultLocale, dict, formatDate, type Dictionary, type Locale } from "@/lib/i18n";
 
@@ -23,7 +23,7 @@ export const metadata = {
 function AuthorListItem({ author, t, locale }: { author: Author; t: Dictionary; locale: Locale }) {
   return (
     <li>
-      <a href={authorUrl(author.username)} className="group flex gap-3 py-3">
+      <a href={authorHome(author)} className="group flex gap-3 py-3">
         <Avatar name={author.name} username={author.username} src={author.avatar_url} size={40} />
         <span className="min-w-0 flex-1">
           <span className="block truncate text-[0.9375rem] font-semibold group-hover:underline group-hover:underline-offset-4">
@@ -91,7 +91,7 @@ export default async function Home({ searchParams }: PageProps<"/">) {
                 <ul className="no-scrollbar -mx-4 mt-4 flex gap-5 overflow-x-auto px-4">
                   {authors.map((author) => (
                     <li key={author.username} className="w-[72px] shrink-0">
-                      <a href={authorUrl(author.username)} className="flex flex-col items-center gap-2 text-center">
+                      <a href={authorHome(author)} className="flex flex-col items-center gap-2 text-center">
                         <Avatar name={author.name} username={author.username} src={author.avatar_url} size={60} />
                         <span className="line-clamp-2 text-xs font-medium leading-tight">{author.name}</span>
                       </a>
@@ -110,8 +110,8 @@ export default async function Home({ searchParams }: PageProps<"/">) {
                   <PostRow
                     key={post.id}
                     post={post}
-                    href={post.author ? authorUrl(post.author.username, `/posts/${post.slug}`) : post.url}
-                    authorHref={post.author ? authorUrl(post.author.username) : undefined}
+                    href={post.author ? authorHome(post.author, `/posts/${post.slug}`) : post.url}
+                    authorHref={post.author ? authorHome(post.author) : undefined}
                     showAuthor
                     locale={locale}
                   />

@@ -4,6 +4,7 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Database\Factories\UserFactory;
+use App\Support\CustomDomain;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
@@ -17,7 +18,7 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
-#[Fillable(['name', 'username', 'email', 'password', 'bio', 'avatar', 'telegram_channel', 'webhook_url', 'webhook_secret', 'locale', 'template'])]
+#[Fillable(['name', 'username', 'email', 'password', 'bio', 'avatar', 'telegram_channel', 'webhook_url', 'webhook_secret', 'locale', 'template', 'custom_domain'])]
 #[Hidden(['password', 'remember_token', 'bot_token_hash', 'webhook_secret'])]
 class User extends Authenticatable implements FilamentUser
 {
@@ -75,7 +76,34 @@ class User extends Authenticatable implements FilamentUser
             'is_admin' => 'boolean',
             'blocked_at' => 'datetime',
             'premium_until' => 'datetime',
+            'custom_domain_verified_at' => 'datetime',
         ];
+    }
+
+    protected static function booted(): void
+    {
+        // A new domain has to be checked again before readers are sent there.
+        static::saving(function (User $user): void {
+            if ($user->isDirty('custom_domain')) {
+                $user->custom_domain_verified_at = null;
+            }
+        });
+    }
+
+    /**
+     * Where readers find the author's space instead of their subdomain: their
+     * own domain, while it is verified, Premium is on and the platform serves
+     * own domains at all.
+     */
+    public function activeCustomDomain(): ?string
+    {
+        return CustomDomain::enabled()
+            && $this->custom_domain !== null
+            && $this->custom_domain_verified_at !== null
+            && $this->isPremium()
+            && ! $this->isBlocked()
+                ? $this->custom_domain
+                : null;
     }
 
     /**
@@ -203,7 +231,11 @@ class User extends Authenticatable implements FilamentUser
         return static::where('bot_token_hash', hash('sha256', $token))->first();
     }
 
-    /** The author's space on the reader site: <username>.<frontend domain>. */
+    /**
+     * The author's space on the reader site: their own domain when it is
+     * active, else <username>.<frontend domain>. Post links, feeds and the
+     * channel announcements all start here.
+     */
     public function siteUrl(): string
     {
         $frontend = (string) config('app.frontend_url', config('app.url'));
@@ -213,7 +245,9 @@ class User extends Authenticatable implements FilamentUser
         $host = $parts['host'] ?? 'localhost';
         $port = isset($parts['port']) ? ':'.$parts['port'] : '';
 
-        return "{$scheme}://{$this->username}.{$host}{$port}";
+        $domain = $this->activeCustomDomain();
+
+        return $domain !== null ? "{$scheme}://{$domain}{$port}" : "{$scheme}://{$this->username}.{$host}{$port}";
     }
 
     public function avatarUrl(): ?string

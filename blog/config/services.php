@@ -43,4 +43,12 @@ return [
         'peer_url' => env('TLS_ASK_PEER_URL', ''),
     ],
 
+    // Premium authors' own domains. Off until the edge Caddy sends unknown
+    // hosts to this stack's reader site (DEPLOY.md); one stack per server
+    // can have it. The IP is shown to authors for a bare domain's A record.
+    'custom_domains' => [
+        'enabled' => (bool) env('CUSTOM_DOMAINS_ENABLED', false),
+        'ip' => env('CUSTOM_DOMAIN_IP', ''),
+    ],
+
 ];

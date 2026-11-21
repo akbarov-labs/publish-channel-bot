@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\BotConnectController;
 use App\Http\Controllers\Api\BotMediaController;
 use App\Http\Controllers\Api\BotPostController;
 use App\Http\Controllers\Api\PageRequestController;
+use App\Http\Controllers\Api\PublicHostController;
 use App\Http\Controllers\Api\PremiumController;
 use App\Http\Controllers\Api\PublicPostController;
 use App\Http\Controllers\Api\TlsAskController;
@@ -39,6 +40,8 @@ Route::get('/tls/allowed', TlsAskController::class);
 Route::prefix('public')->group(function () {
     Route::get('/posts', [PublicPostController::class, 'index']);
     Route::get('/authors', [PublicPostController::class, 'authors']);
+    // Which author a host is for; the reader site's proxy asks on each new host.
+    Route::get('/hosts/{host}', PublicHostController::class)->where('host', '[A-Za-z0-9.-]{1,253}');
     Route::get('/authors/{username}', [PublicPostController::class, 'author']);
     Route::get('/authors/{username}/posts', [PublicPostController::class, 'authorPosts']);
     Route::get('/authors/{username}/preview/{token}', [PublicPostController::class, 'preview']);

@@ -173,6 +173,16 @@ blog with `BOT_INTERNAL_SECRET`:
 Cancelling needs no call: no renewal arrives, and `premium_until` passes. The
 reader API's author has `premium: true/false`; when it ends is not public.
 
+**Own domains.** With `CUSTOM_DOMAINS_ENABLED`, a Premium author sets a
+domain in Profile and presses **Check DNS**. The blog checks the domain
+resolves to the reader site's address (a CNAME) or `CUSTOM_DOMAIN_IP` (an A
+record). After that, `siteUrl()` and every post link use the domain. The
+reader site's proxy asks `GET /api/public/hosts/{host}` which author a host
+is for, and keeps the answer for a minute. It serves an own domain while it
+is live, sends the subdomain there with a 302, and sends the domain back to
+the subdomain once Premium ends. Setup is in DEPLOY.md, "Authors' own
+domains".
+
 ## Tests
 
 The images leave tests out, so they are mounted in:

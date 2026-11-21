@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import PostView from "@/components/PostView";
 import { getAuthor, getPost } from "@/lib/api";
-import { authorUrl } from "@/lib/hosts";
+import { authorHome } from "@/lib/hosts";
 import { dict, localeOf } from "@/lib/i18n";
 import { cleanExcerpt } from "@/lib/text";
 
@@ -14,7 +14,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!post) return { title: dict(localeOf((await getAuthor(author))?.locale)).notFoundTitle };
 
   const description = cleanExcerpt(post) ?? undefined;
-  const url = authorUrl(post.author.username, `/posts/${post.slug}`);
+  const url = authorHome(post.author, `/posts/${post.slug}`);
 
   return {
     title: post.title,

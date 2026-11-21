@@ -1,6 +1,6 @@
 import { getAuthor, getAuthorSitemap, getAuthorTopics } from "@/lib/api";
 import { sitemap } from "@/lib/feed";
-import { authorUrl } from "@/lib/hosts";
+import { authorHome } from "@/lib/hosts";
 
 // Built per request from the blog (and the host): nothing to prerender at build
 // time, when the API is not there. The API fetches keep their own short cache.
@@ -18,11 +18,11 @@ export async function GET(_request: Request, { params }: RouteContext<"/site/[au
   if (!author || !posts) return new Response("Not found", { status: 404 });
 
   return sitemap([
-    { loc: authorUrl(author.username, "/"), lastmod: author.latest_post_at },
+    { loc: authorHome(author, "/"), lastmod: author.latest_post_at },
     ...posts.map((post) => ({
-      loc: authorUrl(author.username, `/posts/${encodeURIComponent(post.slug)}`),
+      loc: authorHome(author, `/posts/${encodeURIComponent(post.slug)}`),
       lastmod: post.updated_at,
     })),
-    ...topics.map((topic) => ({ loc: authorUrl(author.username, `/topics/${encodeURIComponent(topic.slug)}`) })),
+    ...topics.map((topic) => ({ loc: authorHome(author, `/topics/${encodeURIComponent(topic.slug)}`) })),
   ]);
 }
