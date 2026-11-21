@@ -5,10 +5,12 @@ namespace App\Filament\Resources\Authors;
 use App\Filament\Resources\Authors\Pages\EditAuthor;
 use App\Filament\Resources\Authors\Pages\ListAuthors;
 use App\Filament\Resources\Authors\Pages\ViewAuthor;
+use App\Filament\Resources\Authors\RelationManagers\PaymentsRelationManager;
 use App\Filament\Resources\Authors\RelationManagers\PostsRelationManager;
 use App\Models\User;
 use BackedEnum;
 use Filament\Actions\ActionGroup;
+use Filament\Actions\BulkActionGroup;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Forms\Components\Select;
@@ -133,6 +135,11 @@ class AuthorResource extends Resource
                         ->label('Channel')
                         ->url(fn (User $record): ?string => $record->telegramUrl(), shouldOpenInNewTab: true)
                         ->placeholder('Not connected'),
+                    TextEntry::make('premium_until')
+                        ->label('Premium')
+                        ->state(fn (User $record): string => self::premiumOf($record))
+                        ->badge()
+                        ->color(fn (User $record): string => $record->isPremium() ? 'warning' : 'gray'),
                     TextEntry::make('locale')
                         ->label('Site language')
                         ->formatStateUsing(fn (?string $state): string => User::LOCALES[$state] ?? (string) $state),
@@ -183,6 +190,13 @@ class AuthorResource extends Resource
                     ->state(fn (User $record): string => self::statusOf($record))
                     ->badge()
                     ->color(fn (string $state): string => self::statusColor($state)),
+                TextColumn::make('premium_until')
+                    ->label('Premium')
+                    ->state(fn (User $record): ?string => $record->isPremium() ? 'Until '.$record->premium_until->format('d M Y') : null)
+                    ->badge()
+                    ->color('warning')
+                    ->placeholder('—')
+                    ->sortable(),
                 TextColumn::make('created_at')
                     ->label('Joined')
                     ->dateTime('d M Y')
@@ -200,6 +214,17 @@ class AuthorResource extends Resource
                         true: fn (Builder $query) => $query->whereNotNull('blocked_at'),
                         false: fn (Builder $query) => $query->whereNull('blocked_at'),
                     ),
+                TernaryFilter::make('premium')
+                    ->label('Premium')
+                    ->placeholder('Everyone')
+                    ->trueLabel('Has Premium')
+                    ->falseLabel('No Premium')
+                    ->queries(
+                        true: fn (Builder $query) => $query->premium(),
+                        false: fn (Builder $query) => $query->where(fn (Builder $query) => $query
+                            ->whereNull('premium_until')
+                            ->orWhere('premium_until', '<=', now()->subDays(User::PREMIUM_GRACE_DAYS))),
+                    ),
             ])
             ->recordUrl(fn (User $record): string => static::getUrl('view', ['record' => $record]))
             ->recordActions([
@@ -207,8 +232,14 @@ class AuthorResource extends Resource
                     ViewAction::make()->label('Details and posts'),
                     EditAction::make(),
                     AuthorActions::setPassword(),
+                    AuthorActions::grantPremium(),
                     AuthorActions::block(),
                     AuthorActions::unblock(),
+                ]),
+            ])
+            ->toolbarActions([
+                BulkActionGroup::make([
+                    AuthorActions::grantPremiumToMany(),
                 ]),
             ]);
     }
@@ -217,6 +248,7 @@ class AuthorResource extends Resource
     {
         return [
             PostsRelationManager::class,
+            PaymentsRelationManager::class,
         ];
     }
 
@@ -235,6 +267,15 @@ class AuthorResource extends Resource
             $user->isBlocked() => 'Blocked',
             $user->isAdmin() => 'Admin',
             default => 'Active',
+        };
+    }
+
+    public static function premiumOf(User $user): string
+    {
+        return match (true) {
+            $user->isPremium() => 'Until '.$user->premium_until->format('d M Y'),
+            $user->premium_until !== null => 'Ended '.$user->premium_until->format('d M Y'),
+            default => 'Never had it',
         };
     }
 

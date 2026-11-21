@@ -4,9 +4,11 @@ namespace App\Filament\Resources\Authors;
 
 use App\Models\User;
 use Filament\Actions\Action;
+use Filament\Actions\BulkAction;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Support\Icons\Heroicon;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Str;
 
 /** What the admin can do to an account, from the list and from its page. */
@@ -82,5 +84,74 @@ class AuthorActions
 
                 Notification::make()->title("{$record->name} is unblocked")->success()->send();
             });
+    }
+
+    /**
+     * A gift, a comp or a trial: N more days of Premium, counted from the end
+     * of the Premium they already have. Kept as a payment row with no money.
+     */
+    public static function grantPremium(): Action
+    {
+        return Action::make('grantPremium')
+            ->label('Grant Premium')
+            ->icon(Heroicon::OutlinedSparkles)
+            ->color('warning')
+            ->modalHeading(fn (User $record): string => "Premium for {$record->name}")
+            ->modalDescription(fn (User $record): string => $record->isPremium()
+                ? 'They have Premium until '.$record->premium_until->format('d M Y').'. The days are added after that.'
+                : 'Premium starts now.')
+            ->modalSubmitActionLabel('Grant')
+            ->schema(self::grantSchema())
+            ->action(function (User $record, array $data): void {
+                $payment = $record->grantPremium((int) $data['days'], auth()->user(), $data['note'] ?: null);
+
+                Notification::make()
+                    ->title("{$record->name} has Premium until ".$payment->premium_until->format('d M Y'))
+                    ->success()
+                    ->send();
+            });
+    }
+
+    /** The same for many authors at once: the launch trial, say. */
+    public static function grantPremiumToMany(): BulkAction
+    {
+        return BulkAction::make('grantPremium')
+            ->label('Grant Premium')
+            ->icon(Heroicon::OutlinedSparkles)
+            ->color('warning')
+            ->modalHeading('Grant Premium to the selected authors')
+            ->modalDescription('Each gets the days after the end of the Premium they already have. Blocked authors are skipped.')
+            ->modalSubmitActionLabel('Grant')
+            ->schema(self::grantSchema())
+            ->deselectRecordsAfterCompletion()
+            ->action(function (Collection $records, array $data): void {
+                $granted = $records
+                    ->reject(fn (User $user): bool => $user->isBlocked())
+                    ->each(fn (User $user) => $user->grantPremium((int) $data['days'], auth()->user(), $data['note'] ?: null))
+                    ->count();
+
+                Notification::make()
+                    ->title($granted.' '.Str::plural('author', $granted).' got '.$data['days'].' days of Premium')
+                    ->success()
+                    ->send();
+            });
+    }
+
+    private static function grantSchema(): array
+    {
+        return [
+            TextInput::make('days')
+                ->numeric()
+                ->integer()
+                ->required()
+                ->minValue(1)
+                ->maxValue(3660)
+                ->default(30)
+                ->suffix('days'),
+            TextInput::make('note')
+                ->maxLength(255)
+                ->placeholder('Launch trial, thank-you, refund…')
+                ->helperText('Only you see it, in their payments.'),
+        ];
     }
 }

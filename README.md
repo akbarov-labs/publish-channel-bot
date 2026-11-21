@@ -149,6 +149,29 @@ their posts, drafts included, read-only. From the list or the page:
   channel posts stop arriving, their scheduled posts are not announced, and
   their page, posts and feeds leave the reader site. Nothing is deleted;
   **Unblock** brings it all back. The admin account itself cannot be blocked.
+- **Grant Premium**: N more days, counted from the end of the Premium they
+  already have. Select several authors in the list to grant it to all of them
+  at once (a launch trial, say); blocked ones are skipped. The note shows only
+  in their **Premium payments**.
+
+## Premium
+
+An author has Premium while `users.premium_until` is in the future, plus
+three grace days, so a renewal that arrives late does not switch anything off.
+Every period they got, whether paid or granted, is a row in `payments`.
+Telegram's charge id is unique there, so the same payment reported twice is
+counted once.
+
+The bot sells Premium as a monthly Telegram Stars subscription and calls the
+blog with `BOT_INTERNAL_SECRET`:
+
+| Method | Path | Purpose |
+| --- | --- | --- |
+| `POST` | `/api/internal/premium/status` | `{telegram_user_id}` → `{author, premium, premium_until, blocked}`, or 404 for someone who is not an author. Asked on `/premium` and before Telegram charges. |
+| `POST` | `/api/internal/premium/payments` | The fields of Telegram's `SuccessfulPayment` plus `telegram_user_id`. `premium_until` moves to `subscription_expiration_date` and never back. Returns 201 for a new payment, 200 for one already recorded, and 404 for someone who is not an author (the bot refunds it). |
+
+Cancelling needs no call: no renewal arrives, and `premium_until` passes. The
+reader API's author has `premium: true/false`; when it ends is not public.
 
 ## Tests
 

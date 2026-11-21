@@ -4,6 +4,7 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Database\Factories\UserFactory;
+use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
@@ -73,6 +74,7 @@ class User extends Authenticatable implements FilamentUser
             'webhook_secret' => 'encrypted',
             'is_admin' => 'boolean',
             'blocked_at' => 'datetime',
+            'premium_until' => 'datetime',
         ];
     }
 
@@ -102,6 +104,61 @@ class User extends Authenticatable implements FilamentUser
     public function unblock(): void
     {
         $this->forceFill(['blocked_at' => null])->save();
+    }
+
+    /**
+     * Days Premium stays on after premium_until. A Stars subscription renews
+     * at the very end of its period, and the renewal reaches us through the
+     * bot, so a late message or a bot that is down for a while must not
+     * switch an author's features off.
+     */
+    public const PREMIUM_GRACE_DAYS = 3;
+
+    public function isPremium(): bool
+    {
+        return $this->premium_until !== null
+            && $this->premium_until->copy()->addDays(self::PREMIUM_GRACE_DAYS)->isFuture();
+    }
+
+    /** Authors whose Premium is on, grace days included. */
+    public function scopePremium(Builder $query): void
+    {
+        $query->where('premium_until', '>', now()->subDays(self::PREMIUM_GRACE_DAYS));
+    }
+
+    /**
+     * Moves premium_until to $until, never back: a renewal that arrives after
+     * the admin gave a longer gift must not cut the gift short.
+     */
+    public function extendPremiumTo(CarbonInterface $until): void
+    {
+        if ($this->premium_until === null || $until->greaterThan($this->premium_until)) {
+            $this->forceFill(['premium_until' => $until])->save();
+        }
+    }
+
+    /**
+     * The admin's gift or trial: $days more, counted from the end of the
+     * Premium they have, or from now if they have none.
+     */
+    public function grantPremium(int $days, ?User $by = null, ?string $note = null): Payment
+    {
+        $from = $this->premium_until !== null && $this->premium_until->isFuture() ? $this->premium_until : now();
+        $until = $from->copy()->addDays($days);
+
+        $this->forceFill(['premium_until' => $until])->save();
+
+        return $this->payments()->create([
+            'provider' => Payment::PROVIDER_MANUAL,
+            'premium_until' => $until,
+            'granted_by' => $by?->id,
+            'note' => $note,
+        ]);
+    }
+
+    public function payments(): HasMany
+    {
+        return $this->hasMany(Payment::class);
     }
 
     /** Authors who are not blocked. */

@@ -28,10 +28,7 @@ class BotConnectController extends Controller
             'webhook_secret' => ['required', 'string', 'min:16', 'max:255'],
         ]);
 
-        $author = PageRequest::where('telegram_user_id', $data['telegram_user_id'])
-            ->whereNotNull('user_id')
-            ->first()
-            ?->user;
+        $author = PageRequest::authorFor($data['telegram_user_id']);
 
         $where = [
             'api_base' => url('/api/telegram'),
