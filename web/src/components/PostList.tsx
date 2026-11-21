@@ -2,7 +2,7 @@ import { Pin } from "@/components/Icons";
 import { PostMeta, PostRow, SmartLink } from "@/components/PostRow";
 import type { PostSummary } from "@/lib/api";
 import { dict, formatDate, type Locale } from "@/lib/i18n";
-import type { Template } from "@/lib/templates";
+import { layoutOf, type Template } from "@/lib/templates";
 import { cleanExcerpt, coverOf, guessLang } from "@/lib/text";
 
 /** Magazine: a card with its picture on top. */
@@ -87,7 +87,9 @@ export default function PostList({
   template: Template;
   pinnedId?: number;
 }) {
-  if (template === "magazine") {
+  const layout = layoutOf(template);
+
+  if (layout === "magazine") {
     return (
       <div className="grid gap-x-8 gap-y-12 border-t border-line pt-10 sm:grid-cols-2">
         {posts.map((post) => (
@@ -97,7 +99,7 @@ export default function PostList({
     );
   }
 
-  if (template === "notebook") {
+  if (layout === "notebook") {
     return (
       <div className="divide-y divide-line border-t border-line">
         {posts.map((post) => (

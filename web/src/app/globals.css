@@ -402,3 +402,58 @@ body {
   font-weight: 600;
   letter-spacing: -0.01em;
 }
+
+/* ---- Premium designs. The blog sends Classic while an author has no Premium. ---- */
+
+/* Midnight: dark at any hour, night blue with a gold accent, posts in a list. */
+[data-template="midnight"] {
+  --bg: #0e1320;
+  --surface: #161c2b;
+  --ink: #e9e6de;
+  --ink-soft: #c8c4ba;
+  --muted: #9893a0;
+  --line: #242b3c;
+  --accent: #e2b65c;
+  --accent-soft: #2a2414;
+  --on-accent: #1b1406;
+  color-scheme: dark;
+}
+
+[data-template="midnight"] .title {
+  font-family: var(--font-serif);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+/* Gazette: a front page, near-black serif headlines on newsprint, a deep blue accent, cards. */
+[data-template="gazette"] {
+  --bg: #f6f5f1;
+  --surface: #ecebe5;
+  --ink: #141414;
+  --ink-soft: #333331;
+  --muted: #5f5f5a;
+  --line: #dcdbd3;
+  --accent: #1f3d8a;
+  --accent-soft: #e2e7f4;
+  --on-accent: #ffffff;
+}
+
+@media (prefers-color-scheme: dark) {
+  [data-template="gazette"] {
+    --bg: #121315;
+    --surface: #1b1c1f;
+    --ink: #eceae4;
+    --ink-soft: #cbc9c2;
+    --muted: #9b9a94;
+    --line: #2a2b2f;
+    --accent: #93acef;
+    --accent-soft: #1a2240;
+    --on-accent: #0b1022;
+  }
+}
+
+[data-template="gazette"] .title {
+  font-family: var(--font-serif);
+  font-weight: 800;
+  letter-spacing: -0.025em;
+}

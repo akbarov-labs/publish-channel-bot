@@ -16,8 +16,10 @@ export type Author = {
   site_url: string;
   /** The language of the author's interface; posts keep their own. */
   locale?: string;
-  /** The design the author picked: classic, magazine or notebook. */
+  /** The design readers see (src/lib/templates.ts); Classic for a Premium one without Premium. */
   template?: string;
+  /** Premium is on: no platform credit in the footer. */
+  premium?: boolean;
   posts_count?: number;
   latest_post_at?: string | null;
 };

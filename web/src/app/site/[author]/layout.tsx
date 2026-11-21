@@ -41,9 +41,12 @@ export default async function AuthorLayout({ children, params }: LayoutProps<"/s
             <a href="/feed.xml" className="hover:text-ink hover:underline hover:underline-offset-4">
               RSS
             </a>
-            <a href={rootUrl().origin} className="hover:text-ink hover:underline hover:underline-offset-4">
-              {t.publishedOn(SITE_NAME)}
-            </a>
+            {/* Premium spaces carry no platform credit. */}
+            {!author.premium && (
+              <a href={rootUrl().origin} className="hover:text-ink hover:underline hover:underline-offset-4">
+                {t.publishedOn(SITE_NAME)}
+              </a>
+            )}
           </span>
         </div>
       </footer>

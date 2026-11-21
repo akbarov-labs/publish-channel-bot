@@ -50,7 +50,15 @@ class User extends Authenticatable implements FilamentUser
         'classic' => ['Classic', 'Clean and calm: posts in a list with a small picture each, the newest given room at the top.'],
         'magazine' => ['Magazine', 'Pictures first: posts as cards in a grid, for channels with photos and covers.'],
         'notebook' => ['Notebook', 'Words first: serif type on warm paper, dates in the margin, no pictures in lists.'],
+        'midnight' => ['Midnight', 'Dark at any hour: light type on deep night blue with a gold accent, posts in a list.'],
+        'gazette' => ['Gazette', 'A front page: bold serif headlines on newsprint, posts as cards.'],
     ];
+
+    /**
+     * Designs that come with Premium. Without it the reader site shows
+     * Classic, but the author's pick is kept for when Premium comes back.
+     */
+    public const PREMIUM_TEMPLATES = ['midnight', 'gazette'];
 
     /** The database default too, so a model that was never reloaded has it. */
     protected $attributes = [
@@ -154,6 +162,18 @@ class User extends Authenticatable implements FilamentUser
             'granted_by' => $by?->id,
             'note' => $note,
         ]);
+    }
+
+    /** The design readers see: the author's pick, or Classic for a Premium one without Premium. */
+    public function siteTemplate(): string
+    {
+        $template = $this->template ?? 'classic';
+
+        if (! array_key_exists($template, self::TEMPLATES)) {
+            return 'classic';
+        }
+
+        return in_array($template, self::PREMIUM_TEMPLATES, true) && ! $this->isPremium() ? 'classic' : $template;
     }
 
     public function payments(): HasMany
