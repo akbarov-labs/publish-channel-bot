@@ -1,7 +1,7 @@
 import re
 from functools import lru_cache
 
-from pydantic import field_validator, model_validator
+from pydantic import Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 # What Telegram accepts as a webhook secret_token, at a length worth having.
@@ -41,6 +41,17 @@ class Settings(BaseSettings):
     blog_internal_url: str | None = None
     bot_internal_secret: str | None = None
 
+    # Premium's monthly price in Telegram Stars. 0 keeps it off the shelf:
+    # /premium says it is not on sale and no payment is accepted. Selling
+    # also needs the blog above, which keeps who has Premium. Telegram caps a
+    # subscription at 10,000 Stars.
+    premium_price_stars: int = Field(0, ge=0, le=10000)
+
+    @field_validator("premium_price_stars", mode="before")
+    @classmethod
+    def _blank_is_zero(cls, value: object) -> object:
+        return 0 if isinstance(value, str) and not value.strip() else value
+
     @field_validator("admin_chat_id", "blog_internal_url", "bot_internal_secret", mode="before")
     @classmethod
     def _blank_is_unset(cls, value: object) -> object:
@@ -50,6 +61,10 @@ class Settings(BaseSettings):
     @property
     def records_page_requests(self) -> bool:
         return bool(self.blog_internal_url and self.bot_internal_secret)
+
+    @property
+    def sells_premium(self) -> bool:
+        return self.premium_price_stars > 0 and self.records_page_requests
 
     @property
     def knows_the_blog(self) -> bool:

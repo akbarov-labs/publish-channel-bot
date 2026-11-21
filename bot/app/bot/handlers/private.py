@@ -39,6 +39,12 @@ WELCOME = (
 )
 
 
+def welcome_text() -> str:
+    if get_settings().sells_premium:
+        return WELCOME + "\n\n⭐ /premium — your own domain, more designs and a year of stats."
+    return WELCOME
+
+
 # "Request a page" on the reader site opens t.me/<bot>?start=join. Authors are
 # made by the admin, so the bot only takes the request and passes it on.
 JOIN_REPLY = {
@@ -106,7 +112,7 @@ async def on_start(message: Message) -> None:
         await repo.get_or_create_author(
             session, message.from_user.id, message.from_user.username
         )
-    await message.answer(WELCOME)
+    await message.answer(welcome_text())
 
 
 @router.message(Command("cancel"))

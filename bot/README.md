@@ -134,6 +134,32 @@ Two limits worth knowing:
 4. `/deactivate` in the channel pauses, `/activate` resumes, `/status` reports.
 5. Send `/import` to pull in everything already posted in the channel.
 
+## Premium
+
+`/premium` sells authors a monthly Telegram Stars subscription when
+`PREMIUM_PRICE_STARS` is set. The blog keeps who has it
+(`/api/internal/premium/*`, with `BOT_INTERNAL_SECRET`).
+
+1. **`/premium`** asks the blog whether this Telegram account is an author.
+   An author without Premium gets a button with a `createInvoiceLink`
+   (`XTR`, `subscription_period` 30 days, payload `premium:<user id>`).
+   An author who already has it, paid or gifted, sees until when, and no
+   button, so nobody pays twice.
+2. **Pre-checkout**: Telegram asks before it charges. The payload must
+   name the payer, and the blog must say they are an author who is not
+   blocked. The blog gets 5 seconds of Telegram's 10.
+3. **`successful_payment`** arrives for the first payment and every
+   renewal. The bot passes it to the blog, which moves `premium_until` to
+   the end of the paid period. The bot tries 4 times, then sends the charge
+   id to `ADMIN_CHAT_ID` so the admin can grant Premium by hand. Someone who
+   stopped being an author in between is refunded with `refundStarPayment`.
+4. **Cancelling** happens in Telegram (Settings → My Stars) and needs
+   nothing from the bot: no renewal arrives, and `premium_until` passes.
+
+`/paysupport <problem>` passes the message to `ADMIN_CHAT_ID`, and `/terms`
+shows the terms. Telegram requires both of bots that take payments. Texts
+follow the user's Telegram language: uz, ru, or en otherwise.
+
 ## Running it
 
 ```bash

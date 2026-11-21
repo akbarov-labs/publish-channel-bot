@@ -213,6 +213,14 @@ request, **Message** and **Dismiss**. Other authors never see it. The bot
 reaches the blog over the stack's own network, and Caddy refuses
 `/api/internal/*` from outside.
 
+**Selling Premium (optional).** Set `PREMIUM_PRICE_STARS` (the monthly
+price in Telegram Stars, up to 10000) next to `BOT_INTERNAL_SECRET` and
+`ADMIN_CHAT_ID`, then recreate the containers. Authors then get `/premium`,
+which sells a 30-day Stars subscription that renews by itself. The blog
+records each payment and keeps who has Premium. Payments the blog could not
+record and `/paysupport` messages come to `ADMIN_CHAT_ID`. Empty or `0`
+keeps Premium off sale. Stars are withdrawn through Fragment.
+
 ### 10. Off-site backups
 
 Add to `/etc/offsite-backup/sources` (`sudo nano`), then
