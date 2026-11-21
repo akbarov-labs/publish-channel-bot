@@ -79,6 +79,8 @@ services:
       # the blog over this stack's own network, with a secret both share.
       BLOG_INTERNAL_URL: http://pcb-blog/api
       BOT_INTERNAL_SECRET: ${BOT_INTERNAL_SECRET:-}
+      # Premium's monthly price in Telegram Stars; empty or 0 keeps it off sale.
+      PREMIUM_PRICE_STARS: ${PREMIUM_PRICE_STARS:-}
     networks:
       default: {}
       edge: {}
