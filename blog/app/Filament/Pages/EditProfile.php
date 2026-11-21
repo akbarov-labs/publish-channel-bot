@@ -72,10 +72,20 @@ class EditProfile extends BaseEditProfile
                         Radio::make('template')
                             ->hiddenLabel()
                             ->options(array_map(fn (array $template) => $template[0], User::TEMPLATES))
-                            ->descriptions(array_map(fn (array $template) => $template[1], User::TEMPLATES))
-                            ->in(array_keys(User::TEMPLATES))
+                            ->descriptions(self::templateDescriptions())
+                            // Premium designs need Premium. One already picked
+                            // stays selectable, so a profile whose Premium ended
+                            // can still be saved; readers see Classic meanwhile.
+                            ->disableOptionWhen(fn (string $value): bool => $this->lacksPremiumFor($value))
+                            ->in(fn (): array => array_values(array_filter(
+                                array_keys(User::TEMPLATES),
+                                fn (string $key): bool => ! $this->lacksPremiumFor($key),
+                            )))
                             ->default('classic')
-                            ->required(),
+                            ->required()
+                            ->helperText(fn (): ?string => $this->getUser()->isPremium()
+                                ? null
+                                : 'Midnight and Gazette come with Premium: send /premium to the bot.'),
                     ]),
 
                 Section::make('Account')
@@ -101,6 +111,27 @@ class EditProfile extends BaseEditProfile
                     ])
                     ->collapsible(),
             ]);
+    }
+
+    /** A Premium design, without Premium, that is not already their pick. */
+    private function lacksPremiumFor(string $template): bool
+    {
+        $user = $this->getUser();
+
+        return in_array($template, User::PREMIUM_TEMPLATES, true)
+            && ! $user->isPremium()
+            && $user->template !== $template;
+    }
+
+    /** @return array<string, string> */
+    private static function templateDescriptions(): array
+    {
+        $descriptions = [];
+        foreach (User::TEMPLATES as $key => [, $description]) {
+            $descriptions[$key] = in_array($key, User::PREMIUM_TEMPLATES, true) ? "{$description} Premium." : $description;
+        }
+
+        return $descriptions;
     }
 
     protected function getHeaderActions(): array

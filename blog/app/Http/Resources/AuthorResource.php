@@ -27,7 +27,8 @@ class AuthorResource extends JsonResource
             'site_url' => $this->siteUrl(),
             // The language of the space's interface, not of its posts.
             'locale' => $this->locale ?? 'uz',
-            'template' => $this->template ?? 'classic',
+            // A Premium design shows only while Premium is on.
+            'template' => $this->siteTemplate(),
             // Whether Premium features are on; when it ends stays private.
             'premium' => $this->isPremium(),
             'posts_count' => $this->whenHas('posts_count'),

@@ -7,7 +7,7 @@ import { FeaturedPost } from "@/components/PostRow";
 import TopicList from "@/components/TopicList";
 import { getAuthor, getAuthorPosts, getAuthorTopics } from "@/lib/api";
 import { dict, localeOf } from "@/lib/i18n";
-import { templateOf } from "@/lib/templates";
+import { layoutOf, templateOf } from "@/lib/templates";
 import { guessLang } from "@/lib/text";
 
 function channelHandle(url: string): string {
@@ -28,14 +28,15 @@ export default async function AuthorHome({ params, searchParams }: PageProps<"/s
   const t = dict(locale);
 
   const template = templateOf(author.template);
+  const layout = layoutOf(template);
 
   // Page one leads with the pinned post when there is one, else the newest.
   // Notebook features nothing: the pinned post simply heads the list.
   const pinned = page === 1 ? (posts.pinned ?? undefined) : undefined;
   const listed = pinned ? posts.data.filter((post) => post.id !== pinned.id) : posts.data;
-  const featured = page === 1 && template !== "notebook" ? (pinned ?? listed[0]) : undefined;
+  const featured = page === 1 && layout !== "notebook" ? (pinned ?? listed[0]) : undefined;
   const rows =
-    template === "notebook" ? (pinned ? [pinned, ...listed] : listed) : featured && !pinned ? listed.slice(1) : listed;
+    layout === "notebook" ? (pinned ? [pinned, ...listed] : listed) : featured && !pinned ? listed.slice(1) : listed;
 
   return (
     <main>
@@ -67,7 +68,7 @@ export default async function AuthorHome({ params, searchParams }: PageProps<"/s
         </section>
       )}
 
-      <div className={`mx-auto px-4 ${template === "magazine" ? "max-w-[1040px] sm:px-6" : "max-w-[720px]"}`}>
+      <div className={`mx-auto px-4 ${layout === "magazine" ? "max-w-[1040px] sm:px-6" : "max-w-[720px]"}`}>
         {posts.data.length === 0 ? (
           <div className="border-t border-line py-16 text-center">
             <h2 className="title text-xl">{t.noPostsTitle}</h2>

@@ -54,7 +54,7 @@ Telegram Bot API does not report them.
 | **Draft previews** | Preview on the post's edit page | A secret link showing the post as readers will; never indexed. "New preview link" retires the old one. |
 | **Stats** | The admin dashboard | Views over 30 days against the 30 before, a daily chart, the most read posts. |
 | **RSS and sitemap** | Every author's space | `/feed.xml` (full posts) and `/sitemap.xml`; the root domain has a feed of everyone's latest. |
-| **Site design** | Profile → Site design | Classic, Magazine (cards, pictures first) or Notebook (serif, words first). |
+| **Site design** | Profile → Site design | Classic, Magazine (cards, pictures first) or Notebook (serif, words first); Midnight and Gazette with Premium. |
 
 ### Keeping posts from bouncing
 
@@ -172,6 +172,15 @@ blog with `BOT_INTERNAL_SECRET`:
 
 Cancelling needs no call: no renewal arrives, and `premium_until` passes. The
 reader API's author has `premium: true/false`; when it ends is not public.
+
+What Premium gives, all switched off again when it ends, with nothing deleted:
+
+| Feature | Where |
+| --- | --- |
+| **No platform credit** | The "Published on …" link leaves the footer of the author's pages. |
+| **Midnight and Gazette** | Two more designs in Profile → Site design. Without Premium the reader site shows Classic, and the pick is kept for when Premium comes back. |
+| **A year of stats** | "Last year" on the dashboard's views chart, beside 7, 30 and 90 days. |
+| **CSV** | `/admin/stats.csv`, linked from the chart: a year of views, one row per post per day it was read. |
 
 ## Tests
 
